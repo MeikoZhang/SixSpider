@@ -815,7 +815,8 @@ function get_as_cp_signature() {
                 r = 0;
             for (var c in e)
                 a[r++] = c;
-            return a.length = r,a
+            return a.length = r,
+                a
         },
         b = {},
         k = {};

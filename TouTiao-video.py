@@ -25,7 +25,4 @@ class Handler(BaseHandler):
         } for x in response.json['data']
         ]
 
-    if __name__ == '__main__':
-        on_start
-
 
