@@ -2,7 +2,7 @@
 import requests
 import re
 import json
-import math
+import os
 import random
 import time
 import pandas as pd
@@ -19,17 +19,35 @@ class toutiao(object):
         self.path = path  # CSV保存地址
         self.url = url
         self.s = requests.session()
-        headers = {'Accept': '*/*',
-                   'Accept-Language': 'zh-CN',
-                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; InfoPath.3; rv:11.0) like Gecko',
-                   'Connection': 'Keep-Alive',
-
-                   }
+        headers = {
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Connection': 'keep-alive',
+            'Host': 'm.toutiao.com',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Mobile Safari/537.36'
+        }
         self.s.headers.update(headers)
-        self.channel = re.search('ch/(.*?)/', url).group(1)
+        # self.channel = re.search('ch/(.*?)/', url).group(1)
 
     def closes(self):
         self.s.close()
+
+    def getParam(self):  # 获取数据
+
+        self.s.get(url=self.url, verify=False)
+        headers = {'referer': self.url}
+        self.s.headers.update(headers)
+
+        Honey = json.loads(self.get_js())
+        eas = Honey['as']
+        ecp = Honey['cp']
+        signature = Honey['_signature']
+        min_behot_time = int(time.time())
+        urlParam = '&min_behot_time={}&as={}&cp={}&_signature={}&i={}'\
+            .format(min_behot_time, eas, ecp, signature, min_behot_time - 24 * 60 * 60)
+        return urlParam
 
     def getdata(self):  # 获取数据
 
@@ -120,7 +138,7 @@ class toutiao(object):
                     }
 
             df = pd.DataFrame(data=data)
-            df.to_csv(self.path + r'\toutiao.csv', encoding='GB18030', index=0)
+            # df.to_csv(self.path + r'\toutiao.csv', encoding='GB18030', index=0)
 
     def getHoney(self, t):  #####根据JS脚本破解as ,cp
         # t = int(time.time())  #获取当前时间
@@ -147,7 +165,7 @@ class toutiao(object):
 
     def get_js(self):
 
-        f = open(r"D:\GitHub\SixSpider\signature.js", 'r', encoding='UTF-8')
+        f = open(r"D:\Github\SixSpider\toutiao\signature.js", 'r', encoding='UTF-8')
         line = f.readline()
         htmlstr = ''
         while line:
@@ -158,11 +176,11 @@ class toutiao(object):
 
 
 if __name__ == '__main__':
-    path = r'D:\toutiao'
     url = 'https://www.toutiao.com/ch/news_tech/'
-    t = toutiao(path, url)
-    t.getdata()
-
-    t.closes()
+    t = toutiao("", url)
+    # t.getdata()
+    #
+    # t.closes()
+    print(t.getParam())
 
 

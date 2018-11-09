@@ -7,5 +7,15 @@ http://docs.pyspider.org/en/latest/
 #本地调试
     pyspider one -i sample.py
     
+# 引用自定义文件夹作为类库
+设置环境变量PYTHONPATH为自定义文件夹
+如: export 设置环境变量PYTHONPATH为自定义文件夹 = D:\Github\SixSpider
 
-    
+# python引入导入自定义模块和外部文件
+https://www.cnblogs.com/Sumomo0516/p/6010575.html
+
+#pyspider 中文简介
+https://www.aliyun.com/jiaocheng/443330.html   
+
+#pyspider中文网
+http://www.pyspider.cn/page/1.html
