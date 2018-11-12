@@ -5,6 +5,8 @@ import os
 from toutiao import ToutiaoRequest as ttr
 # 先导入selenium模块，没安装的自行百度安装就好
 import selenium
+import json
+import toutiao.MysqlUtil as mu
 
 
 # 参考https://blog.csdn.net/weixin_39416561/article/details/82111455
@@ -18,5 +20,19 @@ def get_js():
     ctx = execjs.compile(htmlstr)
     return ctx.call('get_as_cp_signature')
 
-t = ttr.toutiao(os.getcwd(),'https://www.toutiao.com/ch/news_tech/')
-print(t.getParam())
+
+# t = ttr.toutiao(os.getcwd(),'https://www.toutiao.com/ch/news_tech/')
+# print(t.getParam())
+
+sql = [{
+    'video_id': 1,
+    'media_name': 'Runoob',
+    'url': 'http://www.runoob.com'
+},
+    {
+        'video_id': 2,
+        'media_name': 'test2',
+        'url': 'http://www.runoob.com'
+    }
+]
+mu.MysqlUtil().insert(json.dumps(sql))
