@@ -83,8 +83,8 @@ class toutiao(object):
                 self.channel, max_behot_time, max_behot_time, eas, ecp, signature)
             req = self.s.get(url=url, verify=False)
             time.sleep(random.random() * 2 + 2)
-            print(req.text)
-            print(url)
+            # print(req.text)
+            # print(url)
             j = json.loads(req.text)
 
             for k in range(0, 10):

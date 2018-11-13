@@ -1,17 +1,17 @@
-#!/usr/bin/python3
-# -*- coding: UTF-8 -*-
+# 导入依赖包
+# !/usr/bin/python3
 
-import pymysql
+import psycopg2
 import json
 import time
 
 
-class MysqlUtil(object):
+class PgUtil(object):
 
     def __init__(self):
-        db = pymysql.connect("kvcong.com", "test", "6e683c8c2f", "test", charset='utf8')
-        self.db = db
-        self.cursor = db.cursor()
+        # 创建连接对象
+        self.db = conn = psycopg2.connect(database="loan_market", user="bigdata", password="bigdata", host="172.16.5.212", port="5432")
+        self.cursor = conn.cursor()  # 创建指针对象
 
     def insert(self, sql):
 
@@ -20,7 +20,7 @@ class MysqlUtil(object):
         for video in json_insert:
             # SQL 插入语句
             # print(video.get('media_name',''))
-            sql = """INSERT INTO `test`.`toutiao_video` (`source_site`, `source_site_tag`, `video_id`, `media_name`, `title`, `abstract`, `keywords`, `tag`, `video_duration`, `source_url`, `article_type`, `large_mode`, `large_image_url`, `publish_time`, `create_time`) 
+            sql = """INSERT INTO "toutiao_video" ("source_site", "source_site_tag", "video_id", "media_name", "title", "abstract", "keywords", "tag", "video_duration", "source_url", "article_type", "large_mode", "large_image_url", "publish_time", "create_time") 
                   VALUES ('{}', '{}', '{}', '{}','{}','{}', '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}', '{}');"""\
                 .format(video.get('source_site',''), video.get('source_site_tag',''), video.get('video_id',''),
                   video.get('media_name',''), video.get('title',''), video.get('abstract',''),
@@ -30,6 +30,8 @@ class MysqlUtil(object):
 
         try:
             # 执行sql语句
+            # self.cursor.execute("INSERT INTO student(id,name,sex)VALUES(%s,%s,%s)", (2, 'Taxol', 'F'))
+            # 插入数据
             self.cursor.execute(sql)
             # 提交到数据库执行
             self.db.commit()
@@ -56,4 +58,6 @@ if __name__ == '__main__':
             'url': 'http://www.runoob.com'
         }
     ]
-    MysqlUtil().insert(json.dumps(sql))
+    PgUtil().insert(json.dumps(sql))
+
+

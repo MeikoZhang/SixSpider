@@ -7,6 +7,7 @@ from toutiao import ToutiaoRequest as ttr
 import selenium
 import json
 import toutiao.MysqlUtil as mu
+import toutiao.PgUtil as pu
 
 
 # 参考https://blog.csdn.net/weixin_39416561/article/details/82111455
@@ -35,4 +36,5 @@ sql = [{
         'url': 'http://www.runoob.com'
     }
 ]
-mu.MysqlUtil().insert(json.dumps(sql))
+# mu.MysqlUtil().insert(json.dumps(sql))
+pu.PgUtil().insert(json.dumps(sql))
