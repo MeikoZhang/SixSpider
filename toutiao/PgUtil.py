@@ -37,8 +37,9 @@ class PgUtil(object):
             self.db.commit()
         except Exception as e:
             # Rollback in case there is any error
-            print('Exception: ', e)
-            self.db.rollback()
+            # print('Exception: ', e)
+            # self.db.rollback()
+            return
 
 
 def closes(self):

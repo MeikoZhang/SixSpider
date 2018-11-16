@@ -20,12 +20,12 @@ class toutiao(object):
         self.url = url
         self.s = requests.session()
         headers = {
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip, deflate',
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
             'Host': 'm.toutiao.com',
-            'Upgrade-Insecure-Requests': '1',
+            'Referer': 'http://m.365yg.com/?channel=video',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Mobile Safari/537.36'
         }
         self.s.headers.update(headers)
