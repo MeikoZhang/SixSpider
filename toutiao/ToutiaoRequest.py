@@ -20,16 +20,17 @@ class toutiao(object):
         self.url = url
         self.s = requests.session()
         headers = {
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
-            'Host': 'm.toutiao.com',
-            'Referer': 'http://m.365yg.com/?channel=video',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Mobile Safari/537.36'
-        }
+            'Host': 'm.365yg.com',
+            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36'
+            }
         self.s.headers.update(headers)
         # self.channel = re.search('ch/(.*?)/', url).group(1)
+        self.urli = None
 
     def closes(self):
         self.s.close()
@@ -45,8 +46,11 @@ class toutiao(object):
         ecp = Honey['cp']
         signature = Honey['_signature']
         min_behot_time = int(time.time())
+        if self.urli == None:
+            self.urli = min_behot_time - 24 * 60 * 60
+
         urlParam = '&min_behot_time={}&as={}&cp={}&_signature={}&i={}'\
-            .format(min_behot_time, eas, ecp, signature, min_behot_time - 24 * 60 * 60)
+            .format(min_behot_time, eas, ecp, signature, self.urli)
         return urlParam
 
     def getdata(self):  # 获取数据
