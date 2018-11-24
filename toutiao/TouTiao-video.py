@@ -4,6 +4,7 @@
 # Project: zzw_test
 import os
 import json
+
 from pyspider.libs.base_handler import *
 from toutiao import ToutiaoRequest as ttr
 from toutiao import MysqlUtil as msUtil
@@ -19,26 +20,26 @@ class Handler(BaseHandler):
             'Connection': 'keep-alive',
             'Host': 'm.365yg.com',
             'Upgrade-Insecure-Requests': '1',
-            'Cookie': 'tt_webid=6625475797447607822; _ga=GA1.2.1625766023.1542613797; _gid=GA1.2.1374947038.1542613797; csrftoken=dee2e2deb7718b844aa5662aeca51b3e; _ba=BA0.2-20181119-51225-5LsRrZyZfDwnoeh6gTJJ; __tasessionId=3jxtd6ld11542617753708',
+            'Cookies': 'tt_webid=6625475797447607822; _ga=GA1.2.1625766023.1542613797; _gid=GA1.2.1374947038.1542613797; csrftoken=dee2e2deb7718b844aa5662aeca51b3e; _ba=BA0.2-20181119-51225-5LsRrZyZfDwnoeh6gTJJ; __tasessionId=3jxtd6ld11542617753708',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36'
         },
         "timeout": 120,
         "connect_timeout": 60,
-        "retries": 5,
+        "retries": 0,
         "fetch_type": None,
-        "auto_recrawl": True
+        "auto_recrawl": False
     }
 
-    @every(minutes=10)
+    @every(seconds=10)
     def on_start(self):
         url = 'http://m.365yg.com/list/?tag=video&ac=wap&count=20&format=json_raw'
         param = ttr.toutiao("", url).getParam()
         request_url = url + param
         self.crawl(request_url, callback=self.index_page, headers=self.crawl_config["header"])
 
-    @config(age=10 * 60)
+    @config(age=10)
     def index_page(self, response):
-        if response.cookies:
+        if response and response.cookies:
             self.crawl_config["header"]["Cookies"] = response.cookies
 
         jarray = [{
@@ -60,5 +61,5 @@ class Handler(BaseHandler):
         } for video in response.json['data'] if video.get('label', '视频') != '广告'
         ]
         # msUtil.MysqlUtil().insert(json.dumps(jarray))
-        pgUtil.PgUtil().insert(json.dumps(jarray))
+        # pgUtil.PgUtil().insert(json.dumps(jarray))
         return jarray

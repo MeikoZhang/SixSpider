@@ -22,21 +22,21 @@ class MysqlUtil(object):
             # print(video.get('media_name',''))
             sql = """INSERT INTO `test`.`toutiao_video` (`source_site`, `source_site_tag`, `video_id`, `media_name`, `title`, `abstract`, `keywords`, `tag`, `video_duration`, `source_url`, `article_type`, `large_mode`, `large_image_url`, `publish_time`, `create_time`) 
                   VALUES ('{}', '{}', '{}', '{}','{}','{}', '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}', '{}');"""\
-                .format(video.get('source_site',''), video.get('source_site_tag',''), video.get('video_id',''),
-                  video.get('media_name',''), video.get('title',''), video.get('abstract',''),
-                  video.get('keywords',''), video.get('tag',''), video.get('video_duration',''),
-                  video.get('source_url',''), video.get('article_type',''), video.get('large_mode',''),
-                  video.get('large_image_url',''), video.get('publish_time',''), time.strftime("%Y-%m-%d %H:%M:%S"))
+                .format(video.get('source_site', ''), video.get('source_site_tag', ''), video.get('video_id', ''),
+                  video.get('media_name', ''), video.get('title', ''), video.get('abstract', ''),
+                  video.get('keywords', ''), video.get('tag', ''), video.get('video_duration', ''),
+                  video.get('source_url', ''), video.get('article_type', ''), video.get('large_mode', ''),
+                  video.get('large_image_url', ''), video.get('publish_time', ''), time.strftime("%Y-%m-%d %H:%M:%S"))
 
-        try:
-            # 执行sql语句
-            self.cursor.execute(sql)
-            # 提交到数据库执行
-            self.db.commit()
-        except Exception as e:
-            # Rollback in case there is any error
-            print('Exception: ', e)
-            self.db.rollback()
+            try:
+                # 执行sql语句
+                self.cursor.execute(sql)
+                # 提交到数据库执行
+                self.db.commit()
+            except Exception as e:
+                # Rollback in case there is any error
+                print('Exception: ', e)
+                self.db.rollback()
 
 
 def closes(self):

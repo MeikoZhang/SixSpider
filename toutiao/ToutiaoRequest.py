@@ -169,7 +169,7 @@ class toutiao(object):
 
     def get_js(self):
 
-        f = open(r"D:\Github\SixSpider\toutiao\signature.js", 'r', encoding='UTF-8')
+        f = open(r"/Users/krison/PycharmProjects/SixSpider/toutiao/signature.js", 'r', encoding='UTF-8')
         line = f.readline()
         htmlstr = ''
         while line:
