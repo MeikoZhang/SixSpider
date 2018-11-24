@@ -20,7 +20,7 @@ class Handler(BaseHandler):
             'Connection': 'keep-alive',
             'Host': 'm.365yg.com',
             'Upgrade-Insecure-Requests': '1',
-            'Cookies': 'tt_webid=6625475797447607822; _ga=GA1.2.1625766023.1542613797; _gid=GA1.2.1374947038.1542613797; csrftoken=dee2e2deb7718b844aa5662aeca51b3e; _ba=BA0.2-20181119-51225-5LsRrZyZfDwnoeh6gTJJ; __tasessionId=3jxtd6ld11542617753708',
+            'Cookie': 'tt_webid=6625475797447607822; _ga=GA1.2.1625766023.1542613797; _gid=GA1.2.1374947038.1542613797; csrftoken=dee2e2deb7718b844aa5662aeca51b3e; _ba=BA0.2-20181119-51225-5LsRrZyZfDwnoeh6gTJJ; __tasessionId=3jxtd6ld11542617753708',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Mobile Safari/537.36'
         },
         "timeout": 120,
@@ -40,7 +40,7 @@ class Handler(BaseHandler):
     @config(age=10)
     def index_page(self, response):
         if response and response.cookies:
-            self.crawl_config["header"]["Cookies"] = response.cookies
+            self.crawl_config["header"]["Cookie"] = response.cookies
 
         jarray = [{
             "source_site": video.get('source_site', 'https://m.toutiao.com'),
