@@ -20,6 +20,9 @@ https://www.aliyun.com/jiaocheng/443330.html
 #pyspider中文网
 http://www.pyspider.cn/page/1.html
 
+#缺少execjs库
+pip3 install PyExecJS
+
 #mysql驱动
 pip3 install PyMySQL
 http://www.runoob.com/python3/python3-mysql.html

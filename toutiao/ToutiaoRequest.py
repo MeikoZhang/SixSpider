@@ -16,6 +16,7 @@ import execjs
 class toutiao(object):
 
     def __init__(self, path, url):
+        self.js_path=r"/Users/krison/PycharmProjects/SixSpider/toutiao/signature.js";
         self.path = path  # CSV保存地址
         self.url = url
         self.s = requests.session()
@@ -169,7 +170,7 @@ class toutiao(object):
 
     def get_js(self):
 
-        f = open(r"/Users/krison/PycharmProjects/SixSpider/toutiao/signature.js", 'r', encoding='UTF-8')
+        f = open(self.js_path, 'r', encoding='UTF-8')
         line = f.readline()
         htmlstr = ''
         while line:

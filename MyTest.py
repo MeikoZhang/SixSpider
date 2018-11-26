@@ -8,6 +8,7 @@ import selenium
 import json
 import toutiao.MysqlUtil as mu
 import toutiao.PgUtil as pu
+from pyspider.libs.base_handler import *
 
 
 # 参考https://blog.csdn.net/weixin_39416561/article/details/82111455
@@ -37,4 +38,7 @@ sql = [{
     }
 ]
 # mu.MysqlUtil().insert(json.dumps(sql))
-pu.PgUtil().insert(json.dumps(sql))
+# pu.PgUtil().insert(json.dumps(sql))
+handler = BaseHandler()
+response = handler.crawl('http://m.365yg.com')
+print(response)

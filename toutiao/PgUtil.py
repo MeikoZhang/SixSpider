@@ -28,18 +28,18 @@ class PgUtil(object):
                   video.get('source_url',''), video.get('article_type',''), video.get('large_mode',''),
                   video.get('large_image_url',''), video.get('publish_time',''), time.strftime("%Y-%m-%d %H:%M:%S"))
 
-        try:
-            # 执行sql语句
-            # self.cursor.execute("INSERT INTO student(id,name,sex)VALUES(%s,%s,%s)", (2, 'Taxol', 'F'))
-            # 插入数据
-            self.cursor.execute(sql)
-            # 提交到数据库执行
-            self.db.commit()
-        except Exception as e:
-            # Rollback in case there is any error
-            # print('Exception: ', e)
-            # self.db.rollback()
-            return
+            try:
+                # 执行sql语句
+                # self.cursor.execute("INSERT INTO student(id,name,sex)VALUES(%s,%s,%s)", (2, 'Taxol', 'F'))
+                # 插入数据
+                self.cursor.execute(sql)
+            except Exception as e:
+                # Rollback in case there is any error
+                # print('Exception: ', e)
+                # self.db.rollback()
+                return
+        # 提交到数据库执行
+        self.db.commit()
 
 
 def closes(self):

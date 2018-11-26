@@ -32,11 +32,12 @@ class MysqlUtil(object):
                 # 执行sql语句
                 self.cursor.execute(sql)
                 # 提交到数据库执行
-                self.db.commit()
             except Exception as e:
                 # Rollback in case there is any error
                 print('Exception: ', e)
                 self.db.rollback()
+
+        self.db.commit()
 
 
 def closes(self):

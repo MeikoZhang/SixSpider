@@ -30,14 +30,14 @@ class Handler(BaseHandler):
         "auto_recrawl": False
     }
 
-    @every(seconds=10)
+    @every(seconds=20)
     def on_start(self):
         url = 'http://m.365yg.com/list/?tag=video&ac=wap&count=20&format=json_raw'
         param = ttr.toutiao("", url).getParam()
         request_url = url + param
         self.crawl(request_url, callback=self.index_page, headers=self.crawl_config["header"])
 
-    @config(age=10)
+    @config(age=3 * 20)
     def index_page(self, response):
         if response and response.cookies:
             self.crawl_config["header"]["Cookie"] = response.cookies
@@ -63,3 +63,9 @@ class Handler(BaseHandler):
         # msUtil.MysqlUtil().insert(json.dumps(jarray))
         # pgUtil.PgUtil().insert(json.dumps(jarray))
         return jarray
+
+
+if __name__ == '__main__':
+    t = Handler()
+    print(t.crawl('https://www.365yg.com/'))
+
