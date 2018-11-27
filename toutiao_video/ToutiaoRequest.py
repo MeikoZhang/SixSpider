@@ -15,7 +15,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 class toutiao(object):
 
     def __init__(self, path, url):
-        self.js_path = r"/Users/krison/PycharmProjects/SixSpider/toutiao_video/signature.js";
+        self.js_path = r"/usr/local/python3/lib/python3.6/site-packages/pyspider/liuku/toutiao_video/signature.js"
         self.path = path  # CSV保存地址
         self.url = url
         self.s = requests.session()

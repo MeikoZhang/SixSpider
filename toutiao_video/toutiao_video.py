@@ -82,10 +82,9 @@ class Handler(BaseHandler):
                         time.strftime("%Y-%m-%d %H:%M:%S"))
             batch_sql.append(sql)
         # 插入mysql
-        msUtil = MysqlUtil(self.crawl_config["mysql_host"], self.crawl_config["mysql_port"],
-                           self.crawl_config["mysql_user"]
-                           , self.crawl_config["mysql_password"], self.crawl_config["mysql_db"],
-                           self.crawl_config["mysql_charset"])
+        msUtil = MysqlUtil.MysqlUtil(self.crawl_config["mysql_host"], self.crawl_config["mysql_port"]
+                                     , self.crawl_config["mysql_user"], self.crawl_config["mysql_password"]
+                                     , self.crawl_config["mysql_db"],self.crawl_config["mysql_charset"])
         #
         msUtil.execute_batch(batch_sql)
 
