@@ -6,14 +6,14 @@ from toutiao import ToutiaoRequest as ttr
 # 先导入selenium模块，没安装的自行百度安装就好
 import selenium
 import json
-import toutiao.MysqlUtil as mu
-import toutiao.PgUtil as pu
-from pyspider.libs.base_handler import *
+import db.MysqlUtil as mu
+import db.PgUtil as pu
 
 
 # 参考https://blog.csdn.net/weixin_39416561/article/details/82111455
 def get_js():
-    f = open(r"/Users/krison/PycharmProjects/SixSpider/toutiao/signature.js", 'r', encoding='UTF-8')  ##打开JS文件
+    # 打开JS文件
+    f = open(r"/Users/krison/PycharmProjects/SixSpider/toutiao_video/signature.js", 'r', encoding='UTF-8')
     line = f.readline()
     htmlstr = ''
     while line:
@@ -23,7 +23,7 @@ def get_js():
     return ctx.call('get_as_cp_signature')
 
 
-# t = ttr.toutiao(os.getcwd(),'https://www.toutiao.com/ch/news_tech/')
+# t = ttr.toutiao_video(os.getcwd(),'https://www.toutiao.com/ch/news_tech/')
 # print(t.getParam())
 
 sql = [{
@@ -39,6 +39,8 @@ sql = [{
 ]
 # mu.MysqlUtil().insert(json.dumps(sql))
 # pu.PgUtil().insert(json.dumps(sql))
-handler = BaseHandler()
-response = handler.crawl('http://m.365yg.com')
-print(response)
+# handler = BaseHandler()
+# response = handler.crawl('http://m.365yg.com')
+# print(response)
+# print("2'1'3".replace(chr(39), "\\'"))
+
