@@ -76,7 +76,7 @@ class Handler(BaseHandler):
                   VALUES ('{}', '{}', '{}', '{}','{}','{}', '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}', '{}');""" \
                 .format(video.get('source_site', ''), video.get('source_site_tag', ''), video.get('video_id', ''),
                         video.get('media_name', ''), video.get('title', ''), video.get('abstract', ''),
-                        video.get('keywords', ''), video.get('tag', ''), video.get('video_duration', ''),
+                        video.get('keywords', ''), video.get( 'tag', ''), video.get('video_duration', ''),
                         video.get('source_url', ''), video.get('article_type', ''), video.get('large_mode', ''),
                         video.get('large_image_url', ''), video.get('publish_time', ''),
                         time.strftime("%Y-%m-%d %H:%M:%S"))
