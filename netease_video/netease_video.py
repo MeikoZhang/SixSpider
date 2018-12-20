@@ -39,18 +39,17 @@ class Handler(BaseHandler):
         }
     }
 
-    @every(minutes=1)
+    @every(seconds=120)
     def on_start(self):
-        self.crawl('https://3g.163.com/touch/video/', callback=self.index_page, headers=self.crawl_config["header"],
-                   validate_cert=False)
+        self.crawl('https://3g.163.com/touch/video/?ver=c', callback=self.index_page, validate_cert=False)
 
-    @config(age=2 * 60)
+    @config(age=60)
     def index_page(self, response):
         if response and response.cookies:
             self.crawl_config["header"]["Cookie"] = response.cookies
 
         for k, v in self.crawl_config['channel'].items():
-            self.crawl(self.crawl_config['video_url'].format(v, time.time()), callback=self.detail_page,
+            self.crawl(self.crawl_config['video_url'].format(v, int(time.time())), callback=self.detail_page,
                        headers=self.crawl_config["header"], validate_cert=False)
 
     @config(priority=2)
