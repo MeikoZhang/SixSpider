@@ -47,6 +47,9 @@ class MysqlUtil(object):
         # 关闭数据库连接
         self.db.close()
 
+    def get_cursor(self):
+        self.cursor
+
 
 if __name__ == '__main__':
     host = "47.101.146.57"
