@@ -1,7 +1,8 @@
 import sqlite3
 
 
-db_path="/Users/krison/data/result.db"
+db_path = "/Users/krison/data/result.db"
+
 
 def getTables():
     conn = sqlite3.connect(db_path)
@@ -24,5 +25,5 @@ def getColumn():
     print(type(result))
     conn.close()
 
-getColumn()
+
 

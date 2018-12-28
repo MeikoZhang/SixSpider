@@ -16,19 +16,11 @@ import traceback
 import binascii
 import re
 
-crawl_config = {
-    "mysql_host": "47.101.146.57",
-    "mysql_port": 2018,
-    "mysql_db": "dm_report",
-    "mysql_user": "root",
-    "mysql_password": "Liuku!!!111",
-    "mysql_charset": "utf8"
-}
 db = pymysql.connect(host="47.101.146.57", port=2018, user="root", password="Liuku!!!111", db="dm_report",
                      charset="utf8")
 db.autocommit(True)
 cursor = db.cursor(pymysql.cursors.SSCursor)
-cursor.execute("select * from toutiao_video where id > 100000")
+cursor.execute("select * from toutiao_video")
 results = cursor.fetchall()
 if cursor:
     for row in results:
@@ -36,7 +28,8 @@ if cursor:
         video_id = row[3]
         source_url = row[10]
 
-        if source_url.startswith('http://toutiao.com/group/'):
+        # http://toutiao.com/group/
+        if source_url.startswith('http'):
             print("record id", id)
 
             r = ''
@@ -65,7 +58,10 @@ if cursor:
                         print("no video", video_id, url)
 
                     if video_url:
-                        video_real_url = str(base64.b64decode(video_url['main_url'].encode('utf-8')), 'utf-8')
+                        if video_url.get('backup_url_1', None):
+                            video_real_url = str(base64.b64decode(video_url['backup_url_1'].encode('utf-8')), 'utf-8')
+                        else:
+                            video_real_url = str(base64.b64decode(video_url['main_url'].encode('utf-8')), 'utf-8')
                         # print(video_real_url)
                         try:
                             cursor.execute("update toutiao_video set source_url='{}' where id={}"
