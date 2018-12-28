@@ -13,7 +13,6 @@ conn = pymysql.connect(host="47.101.146.57", port=2018, user="root", password="L
 cursor = conn.cursor(pymysql.cursors.SSCursor)
 cursor.execute("select * from toutiao_video_latest where source_url_time < now() - interval 1 hour")
 results = cursor.fetchall()
-pre_sql="update toutiao_video_latest set source_url=%s,source_url_time=now() where id=%s"
 batch_sql=[]
 if cursor:
     for row in results:
@@ -58,19 +57,21 @@ if cursor:
                             video_real_url = str(base64.b64decode(video_url['main_url'].encode('utf-8')), 'utf-8')
                         # print(video_real_url)
                         batch_sql.append((video_real_url, id))
-                        try:
-                            # cursor.execute("update toutiao_video_latest set source_url='{}',source_url_time=now() where id={}"
-                            #                .format(video_real_url, id))
-                            print("update success", id, video_real_url)
-                        except Exception as e:
-                            print("update sql error", id, video_real_url)
-                            print(traceback.format_exc())
             except Exception as e:
                 print("somethings error", video_id, url)
                 print(traceback.format_exc())
 
-update_count = cursor.executemany(pre_sql, batch_sql)
-conn.commit()
-print("execute batch sql over ,update count:", update_count)
-cursor.close()
-conn.close()
+try:
+    # cursor.execute("update toutiao_video_latest set source_url='{}',source_url_time=now() where id={}"
+    #                .format(video_real_url, id))
+    pre_sql = "update toutiao_video_latest set source_url=%s,source_url_time=now() where id=%s"
+    update_count = cursor.executemany(pre_sql, batch_sql)
+    conn.commit()
+    print("execute batch sql over ,update count:", update_count, time.strftime("%Y-%m-%d %H:%M:%S"))
+    cursor.close()
+    conn.close()
+except Exception as e:
+    print("update sql error, batch sql :")
+    print(batch_sql)
+    print(traceback.format_exc())
+
