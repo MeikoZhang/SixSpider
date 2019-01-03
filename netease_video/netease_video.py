@@ -6,6 +6,7 @@
 from pyspider.libs.base_handler import *
 import json
 import time
+from db import MysqlUtil
 
 
 class Handler(BaseHandler):
@@ -26,17 +27,36 @@ class Handler(BaseHandler):
             , "影视": "Video_Movies"
             , "音乐": "Video_Music"
             , "小品": "Video_Opusculum"},
+        'channel_type': {"Video_Movies": "video_movie"
+            , "Video_Gossip": "video_variety"
+            , "Video_Music": "video_music"
+            , "Video_Funny": "video_funny"
+            , "Video_Scene": "video_domestic"
+            , "Video_Adorable": "video_child"
+            , "Video_Curious": "video_life"
+            , "Video_Military": "video_military"
+            , "Video_Technology": "video_tech"
+            , "Video_Comic": "video_comic"
+            , "Video_Opusculum": "video_shortsketch"
+            , "Video_Beauty": "video_beauty"
+            , "Video_Recom": "video_recom"
+            , "Video_Knowledge": "video_knowledge"},
         'header': {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'zh-CN,zh;q=0.9',
-            'Cache-Control': 'max-age=0',
             'Connection': 'keep-alive',
-            'Cookie': '',
+            'Cookie': '_ntes_nnid=3384e64fbdea397b3ef25890f3ae1ac2,1545014667201; _ntes_nuid=3384e64fbdea397b3ef25890f3ae1ac2; _antanalysis_s_id=1546494056834; Province=021; City=021; NNSSPID=2237fe761e094a848025c7ac308832c2',
             'Host': '3g.163.com',
             'Upgrade-Insecure-Requests': '1',
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Mobile Safari/537.36'
-        }
+        },
+        "mysql_host": "47.101.146.57",
+        "mysql_port": 2018,
+        "mysql_db": "dm_report",
+        "mysql_user": "root",
+        "mysql_password": "Liuku!!!111",
+        "mysql_charset": "utf8"
     }
 
     @every(seconds=120)
@@ -63,7 +83,32 @@ class Handler(BaseHandler):
                 if isinstance(video_list, list):
                     for video in video_list:
                         if isinstance(video, dict):
-                            print(video)
-                            jarray.append(video)
+                            # video['tag']=channel
+                            # print(video)
+                            video_tag = self.crawl_config["channel_type"].get(channel, None)
+                            print(video['vid'], video_tag)
+                            if video_tag:
+                                video['tag'] = video_tag
+                                jarray.append(video)
 
+        batch_sql = []
+        for video in jarray:
+            # SQL 插入语句
+            sql = """INSERT INTO `netease_video` (`source_site`, `source_site_tag`, `video_id`, `media_name`, `title`, `abstract`, `keywords`, `tag`, `video_duration`, `source_url`, `article_type`, `large_mode`, `large_image_url`, `publish_time`,`watch_count`,`comment_count`,`reply_id`,`create_time`) VALUES ('{}', '{}', '{}', '{}','{}','{}', '{}', '{}', '{}','{}', '{}', '{}', '{}', '{}','{}','{}','{}', '{}');""".format(
+                'https://3g.163.com/touch/video/', video.get('video', 'video'), video.get('vid', ''),
+                video.get('videosource', ''), video.get('title', ''), video.get('mp4_url', ''),
+                video.get('keywords', ''), video.get('tag', ''), video.get('length', ''), video.get('mp4_url', ''),
+                video.get('article_type', ''), video.get('large_mode', ''), video.get('cover', ''),
+                video.get('putime', ''), video.get('playCount', ''), video.get('replyCount', ''),
+                video.get('replyid', ''), time.strftime("%Y-%m-%d %H:%M:%S"))
+            batch_sql.append(sql)
+        # 插入mysql
+        msUtil = MysqlUtil.MysqlUtil(self.crawl_config["mysql_host"], self.crawl_config["mysql_port"],
+                                     self.crawl_config["mysql_user"], self.crawl_config["mysql_password"],
+                                     self.crawl_config["mysql_db"], self.crawl_config["mysql_charset"])
+        msUtil.execute_batch(batch_sql)
         return jarray
+
+    def on_result(self, result):
+        return
+
