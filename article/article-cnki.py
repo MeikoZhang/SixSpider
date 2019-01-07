@@ -21,8 +21,8 @@ headers={
     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Mobile Safari/537.36'
 }
 # dbCatalog=中国学术文献网络出版总库
-# keyValue=顺尔宁
-keyValue = urllib.parse.quote('顺尔宁')# %E9%A1%BA%E5%B0%94%E5%AE%81
+# keyValue=顺尔宁 # %E9%A1%BA%E5%B0%94%E5%AE%81
+keyValue = urllib.parse.quote('顺尔宁')
 url = 'http://kns.cnki.net/kns/brief/brief.aspx?pagename=ASP.brief_default_result_aspx&isinEn=1&dbPrefix=SCDB' \
       '&dbCatalog=%e4%b8%ad%e5%9b%bd%e5%ad%a6%e6%9c%af%e6%96%87%e7%8c%ae%e7%bd%91%e7%bb%9c%e5%87%ba%e7%89%88%e6%80%bb%e5%ba%93' \
       '&ConfigFile=SCDBINDEX.xml&research=off&t=1546840215538&keyValue={}&S=1&sorttype='.format(keyValue)
