@@ -129,7 +129,9 @@ def get_list(key=None, page="1"):
         print('没有设置关键词！！！')
         return
 
-    # 获取搜索列表
+    # 获取搜索列表，根据条件检索
+    # 年份 BeginYear : "2018", EndYear: "2019"
+    # 更新时间 UpdateTimeType ： 1/1个月内 2/三个月内 3/半年内 4/一年内 5/当年内
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
         'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"'+page+'","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
