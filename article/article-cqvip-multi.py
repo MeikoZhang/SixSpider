@@ -2,7 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
-import urllib
+import http.cookiejar as HC
+import random
+import traceback
+import hashlib
 
 
 headers = {
@@ -10,10 +13,9 @@ headers = {
     , 'Accept-Encoding': 'gzip, deflate'
     , 'Accept-Language': 'zh-CN,zh;q=0.9'
     , 'Connection': 'keep-alive'
-    , 'Content-Length': '1024'
     , 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
     ,
-    'Cookie': 'Hm_lvt_69fff6aaf37627a0e2ac81d849c2d313=1546844118; _qddaz=QD.8cpiis.3hs0de.jqlz1sgj; User=_uid=19028277%2427738173EE21D5737D380371B89E9A2A&_uutid=1%24DCC0C88A6597BFF91D8217A08210E402&_uunid=3%247E3FDE4AFCF8B4AFD9A2D917A54A4075&_ultid=2%24EFBC4C6D6AD4D7056B5B65E5451D5EAF&_uatid=0%2448DF86E51FCF5BD310DC2E440743581A&_uqkdy=0%24C6301CB68C5534157BA315539287132D&_upu=0%24CECCE0C6BD78DFEDB933C2BF33984F97&_upc=%24AAD5936EA2751C571FB7891B01129A16&_suid=%249425A0A64713DBCDBE3F688BAF8A2975&_uun=447229719%40qq.com&_unn=447229719%40qq.com&_uem=447229719%40qq.com&_ugid=0&_uoid=0; UM_distinctid=1682c6163253b7-0afaeb3a5e2d5c-b781636-100200-1682c616327195; _ga=GA1.2.769807723.1546931676; _gid=GA1.2.1572456567.1546932807; __utma=164835757.769807723.1546931676.1546936248.1546936248.1; __utmc=164835757; __utmz=164835757.1546936248.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ASP.NET_SessionId=vefldo3gcnneimlmb5ly45yw; skybug=c9d1538376cacc113f615e4718350312; user_behavior_flag=37964139-a5c5-42a6-9b0c-610f2a92a9c5; search_isEnable=1; LIBUSERSETARTICLESORTCOOKIE=2; Hm_lpvt_69fff6aaf37627a0e2ac81d849c2d313=1546937459; LIBUSERCOOKIE=Oosn4ui+3LIAcpa/+sCLSLumqrc/XpZlqdxCkoqLXe888frrRhvRzCOVrla0ToPKV6Luj9NWHzwzKC24fAeMx7orTNZjIy9oG5qEoA8nJ4PkLiFK9YMoaeMPT//0+cTP5j3Qyzup711HZRD2teAHC/GYoETE1+D71TUGqn0RXmWnUzq+p+lZ+MNHf21qpvDstE1+g1QPTwnxLff6kJDjpToBL6FU59QdFF4I8UDUqrcYR5rRWwAmmulNrvWA55o96aLLTKd0Y+uPT0IMr95/S6q4xagjT+K/lEIg82pcjZHt4wZyy80IRERe/LqA/XXaDEmQ1YdEsWjCzRnLf4Sf38yhW3J20aiRvzVii1jbpaMHUZ9NcMaX0w==; LIBUSERIDCOOKIE=19028277; LIBUSERNAMECOOKIE=447229719@qq.com'
+    'Cookie': 'ASP.NET_SessionId=ns5dkfsbstg53y2tltklz1uf;LIBUSERCOOKIE=Oosn4ui+3LIAcpa/+sCLSLumqrc/XpZlqdxCkoqLXe888frrRhvRzCOVrla0ToPKV6Luj9NWHzwzKC24fAeMx7orTNZjIy9oG5qEoA8nJ4PkLiFK9YMoaeMPT//0+cTP5j3Qyzup711HZRD2teAHC/GYoETE1+D7xlFQ6TytIcsHTyOcxdjlMPZHEJ/nr8eZBxiYxUmkIJvCaCtUKeqiKrzERq/MVLncFbNsmiFRV1LsCaK1a1KMoiSryztwcIm+AyQfGjJ4mccXlSmCk+xuunS/ymN0rANZXV8QEWHWVIhEhSJwhULonh/8ujtw7dCRUchYjtu/N9Q0ks49AX7X6MwH+uvZnyjjx6Qoup6VkLMYn24qH6HN2g==;LIBUSERIDCOOKIE=19028277;LIBUSERNAMECOOKIE=447229719@qq.com;search_isEnable=1;skybug=ea4aa775b9af539f55ca5843428f034b;user_behavior_flag=2bb3cccf-1c24-4c40-805d-9f5082b35071;'
     , 'Host': 'qikan.cqvip.com'
     , 'Origin': 'http://qikan.cqvip.com'
     , 'Referer': 'http://qikan.cqvip.com/Qikan/Search/Advance?from=index'
@@ -22,19 +24,76 @@ headers = {
     , 'X-Requested-With': 'XMLHttpRequest'
 }
 
+
 # 登陆信息
 data = {
     'Username': '447229719@qq.com',
     'Password': '33530912'
 }
 
+# md5转化密码
+m2 = hashlib.md5()
+m2.update(data['Password'].encode('utf-8'))
+data['Password']=m2.hexdigest()
+
+# 下载文件存储目录
+file_dir = r"D:\文档"
+
+# 请求的全局session
 session = requests.Session()
-# session_r = session.post('http://www.cqvip.com/User/', data, headers=headers)
-print('登陆完成，获取session，设置cookies ...... ')
+cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
+# print(cookie_path)
 
 
-# 获取搜索列表
-def get_list(key=None):
+def login():
+    session.cookies = HC.MozillaCookieJar(filename=cookie_path)
+    # session.cookies.save()
+    #  如果存在cookies文件，则加载，如果不存在则提示
+    try:
+        session.cookies.load(ignore_discard=True, ignore_expires=True)
+
+        session.get('http://qikan.cqvip.com/', headers=headers)
+        session.cookies.save(ignore_discard=True, ignore_expires=True)
+
+        session.get('http://qikan.cqvip.com/Qikan/WebControl/IsViewObject', headers=headers)
+        session.cookies.save(ignore_discard=True, ignore_expires=True)
+
+        cookie_str=""
+        for cookie in session.cookies:
+            # print(cookie.name, cookie.value)
+            cookie_str = cookie_str + cookie.name + "=" + cookie.value + ";"
+        print(cookie_str)
+        headers['Cookie'] = cookie_str
+
+        r1 = session.get('http://qikan.cqvip.com/RegistLogin/CheckUserIslogin?'+str(random.random())
+                         , headers=headers)
+        # print(r1.json())
+        # 登陆验证
+        is_login = r1.json().get('isLogined')
+        if is_login:
+            print('已登录 ...cookie有效')
+            return
+        else:
+            print('未登录 ...尝试登陆...')
+    except Exception as e:
+        print('未找到cookies文件')
+        print(traceback.format_exc())
+
+    # 登陆接口
+    login_data={
+        'LoginUserName': data['Username'],
+        'LoginUserPassword': data['Password'],
+        'LoginType': 'normallogin'
+    }
+    login_r = session.post('http://qikan.cqvip.com/RegistLogin/Login', data=login_data, headers=headers)
+    # print(login_r.json())
+    for cookie_l in login_r.cookies:
+        print(cookie_l.name, cookie_l.value)
+    session.cookies.save(ignore_discard=True, ignore_expires=True)
+    print('登陆成功 ...保存cookie')
+
+
+def get_total(key=None):
     if not key:
         print('没有设置关键词！！！')
         return
@@ -46,153 +105,123 @@ def get_list(key=None):
     }
     r = session.post(url, data=list_data, headers=headers)
     r.encoding = 'utf-8'
-    # print(r.text)
     soup = BeautifulSoup(r.text, 'lxml', from_encoding='utf-8')
     # alinks = soup.find_all(attrs={'target': '_blank'})
-    alinks = soup.select('.article-source a')
-    if alinks:
-        print(alinks[1])
-        a_headers = {
-            'Accept': '*/*'
-            , 'Accept-Encoding': 'gzip, deflate'
-            , 'Accept-Language': 'zh-CN,zh;q=0.9'
-            , 'Connection': 'keep-alive'
-            , 'Content-Length': '19'
-            , 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-            ,
-            'Cookie': 'Hm_lvt_69fff6aaf37627a0e2ac81d849c2d313=1546844118; _qddaz=QD.8cpiis.3hs0de.jqlz1sgj; User=_uid=19028277%2427738173EE21D5737D380371B89E9A2A&_uutid=1%24DCC0C88A6597BFF91D8217A08210E402&_uunid=3%247E3FDE4AFCF8B4AFD9A2D917A54A4075&_ultid=2%24EFBC4C6D6AD4D7056B5B65E5451D5EAF&_uatid=0%2448DF86E51FCF5BD310DC2E440743581A&_uqkdy=0%24C6301CB68C5534157BA315539287132D&_upu=0%24CECCE0C6BD78DFEDB933C2BF33984F97&_upc=%24AAD5936EA2751C571FB7891B01129A16&_suid=%249425A0A64713DBCDBE3F688BAF8A2975&_uun=447229719%40qq.com&_unn=447229719%40qq.com&_uem=447229719%40qq.com&_ugid=0&_uoid=0; UM_distinctid=1682c6163253b7-0afaeb3a5e2d5c-b781636-100200-1682c616327195; _ga=GA1.2.769807723.1546931676; _gid=GA1.2.1572456567.1546932807; __utma=164835757.769807723.1546931676.1546936248.1546936248.1; __utmc=164835757; __utmz=164835757.1546936248.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ASP.NET_SessionId=vefldo3gcnneimlmb5ly45yw; skybug=c9d1538376cacc113f615e4718350312; user_behavior_flag=37964139-a5c5-42a6-9b0c-610f2a92a9c5; search_isEnable=1; LIBUSERSETARTICLESORTCOOKIE=2; Hm_lpvt_69fff6aaf37627a0e2ac81d849c2d313=1546937459; LIBUSERCOOKIE=Oosn4ui+3LIAcpa/+sCLSLumqrc/XpZlqdxCkoqLXe888frrRhvRzCOVrla0ToPKV6Luj9NWHzwzKC24fAeMx7orTNZjIy9oG5qEoA8nJ4PkLiFK9YMoaeMPT//0+cTP5j3Qyzup711HZRD2teAHC/GYoETE1+D71TUGqn0RXmWnUzq+p+lZ+MNHf21qpvDstE1+g1QPTwnxLff6kJDjpToBL6FU59QdFF4I8UDUqrcYR5rRWwAmmulNrvWA55o96aLLTKd0Y+uPT0IMr95/S6q4xagjT+K/lEIg82pcjZHt4wZyy80IRERe/LqA/XXaDEmQ1YdEsWjCzRnLf4Sf38yhW3J20aiRvzVii1jbpaMHUZ9NcMaX0w==; LIBUSERIDCOOKIE=19028277; LIBUSERNAMECOOKIE=447229719@qq.com'
-            , 'Host': 'qikan.cqvip.com'
-            , 'Origin': 'http://qikan.cqvip.com'
-            , 'Referer': 'http://qikan.cqvip.com/Qikan/Search/Advance?from=index'
-            ,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
-            , 'X-Requested-With': 'XMLHttpRequest'
-        }
-        a_data={'articleId': '676440637'}
-        a_r = session.post('http://qikan.cqvip.com/Qikan/Article/GetArticleRight', data=a_data, headers=a_headers)
-        print(a_r.headers)
-        print(a_r.content)
 
-    # i = 0
-    # for alink in alinks:
-    #     i = i + 1
-    #     print(i, alink.text, alink['href'])
-    #     # if alink['href'] == '/QK/87088X/201004/34675601.html':
-    #     #     get_download_url(alink)
-    #     # print(i, alink.text, get_download_url(alink))
-    #     down_url = get_download_url(alink)
-    #     if down_url:
-    #         print('下载文章链接 {}'.format(down_url))
-    #         download(down_url)
-    #     time.sleep(5)
+    result = soup.select('.search-top .search-result span input')
+    # print(result)
+    total_str = result[0].attrs['value']
+    if total_str:
+        print("==共找到{}篇文章=========".format(total_str))
+        total = int(total_str)
+    page_size = 20
+    page_total = int((total + page_size - 1)/page_size)
+    print("==每页记录20，共{}页=========".format(page_total))
+    for page in range(page_total):
+        print("开始获取第{}页....".format(page + 1))
+        get_list(key, str(page + 1))
+    print("任务完成 ...")
 
 
-def get_download_url(alink):
-    # print(i, alink.text, alink['href'])
-    download_url = 'http://www.cqvip.com{}'.format(alink['href'])
-    #     # # print(download_url)
-    download_r = session.get(download_url, headers=headers)
-    download_r.encoding = 'utf-8'
-    download_soup = BeautifulSoup(download_r.text, 'html.parser', from_encoding='utf-8')
-    download_a = download_soup.select('.download')
-    detail_headers={
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-        , 'Accept-Encoding': 'gzip, deflate'
-        , 'Accept-Language': 'zh-CN,zh;q=0.9'
-        , 'Cache-Control': 'max-age=0'
-        , 'Connection': 'keep-alive'
-        , 'Host': 'www.cqvip.com'
-        , 'Upgrade-Insecure-Requests': '1'
-        , 'Cookie': 'ASP.NET_SessionId=foiygopapmkibqdszq55qmw2; Hm_lvt_69fff6aaf37627a0e2ac81d849c2d313=1546844118; _qddaz=QD.8cpiis.3hs0de.jqlz1sgj; tencentSig=4597393408; cqvip_usersessionid=1c956e0a-71f5-4a9a-89bc-18087b63a262; PacketUser:AutoLogin=1; User:SUID:UserID=0; User:SUID=; _qdda=3-1.48m3ma; _qddab=3-its12y.jqndanpu; User=_uid=19028277%2427738173EE21D5737D380371B89E9A2A&_uutid=1%24DCC0C88A6597BFF91D8217A08210E402&_uunid=3%247E3FDE4AFCF8B4AFD9A2D917A54A4075&_ultid=2%24EFBC4C6D6AD4D7056B5B65E5451D5EAF&_uatid=0%2448DF86E51FCF5BD310DC2E440743581A&_uqkdy=0%24C6301CB68C5534157BA315539287132D&_upu=0%24CECCE0C6BD78DFEDB933C2BF33984F97&_upc=%24AAD5936EA2751C571FB7891B01129A16&_suid=%249425A0A64713DBCDBE3F688BAF8A2975&_uun=447229719%40qq.com&_unn=447229719%40qq.com&_uem=447229719%40qq.com&_ugid=0&_uoid=0; UM_distinctid=1682c6163253b7-0afaeb3a5e2d5c-b781636-100200-1682c616327195; _ga=GA1.2.769807723.1546931676; _gid=GA1.2.1572456567.1546932807; __utmt=1; __utma=164835757.769807723.1546931676.1546933219.1546933219.1; __utmc=164835757; __utmz=164835757.1546933219.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt_vip2=1; __utmb=164835757.1.10.1546933219; Hm_lpvt_69fff6aaf37627a0e2ac81d849c2d313=1546933219; _qddamta_4006385550=3-0'
-        ,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+# 获取搜索列表
+def get_list(key=None, page="1"):
+    if not key:
+        print('没有设置关键词！！！')
+        return
+
+    # 获取搜索列表
+    url = 'http://qikan.cqvip.com/Search/SearchList'
+    list_data = {
+        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"'+page+'","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
     }
-    if download_a:
-        # print(alink.text, 'http://www.cqvip.com{}'.format(download_a[0]['href']))
-        detail_url = 'http://www.cqvip.com{}'.format(download_a[0]['href'])
-        print(detail_url)
-        detail_r = session.get(detail_url, headers=detail_headers)
-        detail_r.encoding = 'utf-8'
-        detail_soup = BeautifulSoup(detail_r.text, 'lxml', from_encoding='utf-8')
-        detail_download = detail_soup.select('.getfile li a')
-        if detail_download:
-            # 下载链接
-            download_file_url = detail_download[0]['href']
-            print(download_file_url)
-            return download_file_url
-        else:
-            detail_pay = detail_soup.find_all(attrs={'value': '帐户支付'})
-            if detail_pay:
-                # 支付
-                # print(detail_pay)
-                print('需要支付确认！！！')
-                pay_url = 'http://www.cqvip.com/main/confirmpost.aspx'
-                pay_id = detail_soup.find_all(attrs={'name': 'id'})
-                print('payid', pay_id[0]['value'])
-                pay_data = {
-                    'mid': '1',
-                    'id': pay_id[0]['value'],
-                    'p2w': '0'
-                }
-                pay_r = session.post(pay_url, data=pay_data, headers=detail_headers)
-                # print(pay_r.text)
-                print('支付完成 ...')
-                pay_soup = BeautifulSoup(pay_r.text, 'lxml', from_encoding='utf-8')
-                pay_download = pay_soup.select('.getfile li a')
-                if pay_download:
-                    # 下载链接
-                    pay_download_file_url = pay_download[0]['href']
-                    print(pay_download_file_url)
-                    return pay_download_file_url
-        print(download_url, '未找到相关文章...')
-        return None
+    r = session.post(url, data=list_data, headers=headers)
+    r.encoding = 'utf-8'
+    soup = BeautifulSoup(r.text, 'lxml', from_encoding='utf-8')
+    alinks = soup.select('#remark dl')
+    if alinks:
+        i = 0
+        for alink in alinks:
+            i = i+1
+            # 获取文章名称title
+            title = alink.select('dt a[target=_blank]')[0].get_text()
+            article_a = alink.select('.article-source a')
+            print(i, title, len(article_a))
+
+            # 文件重复去重
+            file_will_write = os.path.join(file_dir, title+".pdf")
+            if os.path.exists(file_will_write):
+                print('\t文件已存在 ... {}'.format(file_will_write))
+                continue
+
+            if len(article_a) > 1:
+                time.sleep(3)
+
+                article_click = article_a[1].attrs['onclick']
+                split = article_click.split('\'')
+                # 获取文章标识
+                article_id = split[1]
+                article_sg = split[3]
+                # print(article_id, article_sg)
+
+                # 获取文章是否支付
+                r2 = session.post('http://qikan.cqvip.com/Qikan/Article/GetArticleRight',
+                                  data={
+                                      'articleId': article_id
+                                  },
+                                  headers=headers)
+                # print(r2.json())
+
+                if r2.json()['RetValue']:
+                    print('\t文章已支付')
+                else:
+                    time.sleep(2)
+                    print('\t文章未支付，开始支付费用')
+                    r_pay = session.post('http://qikan.cqvip.com/Qikan/UserPay/BalancePayment',
+                                         data={
+                                             'id': article_id
+                                         },
+                                         headers=headers)
+                    print(r_pay.text)
+                    if r_pay.json().get("PromptMsg") != "支付成功":
+                        print('\t文章支付失败!!!!!!!!!!!!!!!!!!!!!!!!')
+                        # 停止运行
+                        break
+
+                # 获取文章下载链接
+                r3 = session.post('http://qikan.cqvip.com/Qikan/Article/ArticleDown',
+                                  data={
+                                      'id': article_id,
+                                      'info': article_sg,
+                                      'ts': int(time.time() * 1000)
+                                  },
+                                  headers=headers)
+                # print(r3.json())
+
+                download_url = r3.json()['url']
+                if download_url:
+                    print('\t下载文章链接 {}'.format(download_url))
+                    download(download_url)
 
 
 def download(download_url):
-    a_headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
-        , 'Accept-Encoding': 'gzip, deflate'
-        , 'Accept-Language': 'zh-CN,zh;q=0.9'
-        , 'Connection': 'keep-alive'
-        , 'Content-Length': '19'
-        , 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        ,
-        'Cookie': 'Hm_lvt_69fff6aaf37627a0e2ac81d849c2d313=1546844118; _qddaz=QD.8cpiis.3hs0de.jqlz1sgj; User=_uid=19028277%2427738173EE21D5737D380371B89E9A2A&_uutid=1%24DCC0C88A6597BFF91D8217A08210E402&_uunid=3%247E3FDE4AFCF8B4AFD9A2D917A54A4075&_ultid=2%24EFBC4C6D6AD4D7056B5B65E5451D5EAF&_uatid=0%2448DF86E51FCF5BD310DC2E440743581A&_uqkdy=0%24C6301CB68C5534157BA315539287132D&_upu=0%24CECCE0C6BD78DFEDB933C2BF33984F97&_upc=%24AAD5936EA2751C571FB7891B01129A16&_suid=%249425A0A64713DBCDBE3F688BAF8A2975&_uun=447229719%40qq.com&_unn=447229719%40qq.com&_uem=447229719%40qq.com&_ugid=0&_uoid=0; UM_distinctid=1682c6163253b7-0afaeb3a5e2d5c-b781636-100200-1682c616327195; _ga=GA1.2.769807723.1546931676; _gid=GA1.2.1572456567.1546932807; __utma=164835757.769807723.1546931676.1546936248.1546936248.1; __utmc=164835757; __utmz=164835757.1546936248.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ASP.NET_SessionId=vefldo3gcnneimlmb5ly45yw; skybug=c9d1538376cacc113f615e4718350312; user_behavior_flag=37964139-a5c5-42a6-9b0c-610f2a92a9c5; search_isEnable=1; LIBUSERSETARTICLESORTCOOKIE=2; Hm_lpvt_69fff6aaf37627a0e2ac81d849c2d313=1546937459; LIBUSERCOOKIE=Oosn4ui+3LIAcpa/+sCLSLumqrc/XpZlqdxCkoqLXe888frrRhvRzCOVrla0ToPKV6Luj9NWHzwzKC24fAeMx7orTNZjIy9oG5qEoA8nJ4PkLiFK9YMoaeMPT//0+cTP5j3Qyzup711HZRD2teAHC/GYoETE1+D71TUGqn0RXmWnUzq+p+lZ+MNHf21qpvDstE1+g1QPTwnxLff6kJDjpToBL6FU59QdFF4I8UDUqrcYR5rRWwAmmulNrvWA55o96aLLTKd0Y+uPT0IMr95/S6q4xagjT+K/lEIg82pcjZHt4wZyy80IRERe/LqA/XXaDEmQ1YdEsWjCzRnLf4Sf38yhW3J20aiRvzVii1jbpaMHUZ9NcMaX0w==; LIBUSERIDCOOKIE=19028277; LIBUSERNAMECOOKIE=447229719@qq.com'
-        , 'Host': 'qikan.cqvip.com'
-        , 'Origin': 'http://qikan.cqvip.com'
-        , 'Referer': 'http://qikan.cqvip.com/Qikan/Search/Advance?from=index'
-        ,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
-        , 'X-Requested-With': 'XMLHttpRequest'
-    }
-    # download_url='http://ts1.download.cqvip.com/DownPaper.dll?DownCurPaper&CD=2002YY08&Info=BPGEAGBHABACAAAOAHGOBOBHBGAEAHAOAJAEAHAOBGACAHAGAIAHAA&FILE=004/004/6189266.pdf&FileName=%cb%b3%b6%fb%c4%fe%d6%ce%c1%c6%bc%b0%d4%a4%b7%c0%bf%c8%cb%d4%b1%e4%d2%ec%d0%d4%cf%f8%b4%ad%b5%c4%c1%c6%d0%a7%b9%db%b2%ec.pdf'
-    # urllib.urlretrieve(download_url, os.path.join("D:/文档", "11.tar.bz2"))
-    # 把下载地址发送给requests模块
-    # http://qikan.cqvip.com/Qikan/Article/ArticleDown
-    f_data = {
-        'CD': '2018YY714',
-        'Info': 'BJGFADBLANAAAPAAAOGPBJBLBLAGABAFACADAGACAHAHBJADAHAHAOAEAC',
-        'FILE': '024/005/676440637.pdf',
-        'FileName': '骨康胶囊联合依托考昔治疗膝关节骨性关节炎.pdf'
-    }
-    f = session.get(download_url, headers=a_headers)
-    # print(f.text)
-    # 检测编码
-    # print(chardet.detect(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1")))
-    # print(str(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GB2312"))
-    # file_name_str = str(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GB2312")
-    # fileName = file_name_str.split('filename=')[1]
-    # fileName = fileName.replace('"', '').replace("'", "")
-    fileName = "aaaa.pdf"
-    # print(fileName)
-    # # 下载文件
-    with open(os.path.join("D:/文档", fileName), "wb") as code:
-        code.write(f.content)
+    file_name = download_url.split('FileName=')[1]
+    if file_name:
+        file2write = os.path.join(file_dir, file_name)
+        if os.path.exists(file2write):
+            print('\t文件已存在 ... {}'.format(file2write))
+        else:
+            f = session.get(download_url)
+            # 检测编码, 获取header中文文件名
+            # file_name_str = str(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GB2312")
+            # fileName = file_name_str.split('filename=')[1]
+            # fileName = fileName.replace('"', '').replace("'", "")
+            with open(file2write, "wb") as code:
+                code.write(f.content)
+            print('\t文件下载完成 ... {}'.format(file2write))
 
 
 # get_list('U=依托考昔 OR U=安康信')
-# download("http://qikan.cqvip.com/Qikan/Article/ArticleDown")
-# download("http://120.download.cqvip.com/DownPaper.dll?DownCurPaper\u0026CD=2018YY714\u0026Info=BJGFADBLANAAAPAAAOGPBJBLBLAGABAFACADAGACAHAHBJADAHAHAOAEAC\u0026FILE=024/005/676440637.pdf\u0026FileName=骨康胶囊联合依托考昔治疗膝关节骨性关节炎.pdf")
-download("http://120.download.cqvip.com/DownPaper.dll?DownCurPaper&CD=2018YY714&Info=BJGFADBLANAAAPAAAOGPBJBLBLAGABAFACADAGACAHAHBJADAHAHAOAEAC&FILE=024/005/676440637.pdf&FileName=%E9%AA%A8%E5%BA%B7%E8%83%B6%E5%9B%8A%E8%81%94%E5%90%88%E4%BE%9D%E6%89%98%E8%80%83%E6%98%94%E6%B2%BB%E7%96%97%E8%86%9D%E5%85%B3%E8%8A%82%E9%AA%A8%E6%80%A7%E5%85%B3%E8%8A%82%E7%82%8E.pdf")
+login()
+get_total("U=依托考昔 OR U=安康信  OR U=依托考昔 OR U=安康信 OR U=卡泊芬净 OR U=科赛斯 OR U=氯沙坦 OR U=络沙坦 OR U=洛沙坦 OR U=科素亚 OR U=阿仑膦酸钠 OR U=阿伦磷酸钠 OR U=福善美 OR U=氯沙坦钾氢氯噻嗪 OR U=海捷亚 OR U=厄他培南 OR U=艾他培南 OR U=怡万之 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保法止 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保列治 OR U=依那普利 OR U=恩纳普利 OR U=苯酯丙脯酸 OR U=悦宁定 OR U=卡左双多巴 OR U=息宁 OR U=孟鲁司特 OR U=孟鲁斯特 OR U=顺尔宁 OR U=顺耳宁 OR U=亚胺培南 OR U=亚安培南 OR U=泰能 OR U=辛伐他汀 OR U=新伐他汀 OR U=舒降之 OR U=舒降脂 OR U=拉替拉韦 OR U=艾生特 OR U=23价肺炎球菌多糖疫苗 OR U=纽莫法 OR U=甲型肝炎灭活疫苗 OR U=人二倍体甲型肝炎灭活疫苗 OR U=维康特 OR U=西格列汀 OR U=西他列汀 OR U=捷诺维 OR U=西格列汀二甲双胍 OR U=西格列汀二甲双胍 OR U=捷诺达  OR U=依折麦布 OR U=依替米贝 OR U=益适纯 OR U=阿仑膦酸钠维D3 OR U=福美加 OR U=福美佳 OR U=阿瑞匹坦 OR U=阿瑞吡坦 OR U=意美 OR U=地氯雷他定 OR U=恩理思 OR U=糠酸莫米松 OR U=内舒拿 OR U=复方倍他米松 OR U=得宝松 OR U=重组促卵泡素β OR U=普利康 OR U=依折麦布辛伐他汀 OR U=依替米贝辛伐他汀 OR U=葆至能 OR U=重组人干扰素α-2b OR U=甘乐能 OR U=聚乙二醇干扰素α-2b OR U=佩乐能 OR U=替莫唑胺 OR U=泰道 OR U=去氧孕烯炔雌醇 OR U=妈富隆 OR U=去氧孕烯炔雌醇 OR U=美欣乐 OR U=替勃龙 OR U=替勃隆 OR U=利维爱 OR U=十一酸睾酮 OR U=安特尔 OR U=罗库溴铵 OR U=爱可松 OR U=肌松监测仪 OR U=米氮平 OR U=瑞美隆 OR U=依托孕烯 OR U=依伴侬 OR U=泊沙康唑 OR U=诺科飞 OR U=加尼瑞克 OR U=殴加利 OR U=达托霉素 OR U=克必信 OR U=舒更葡糖钠 OR U=布瑞亭 OR U=四价人乳头瘤病毒疫苗 OR U=佳达修 OR U=五价重配轮状病毒减毒活疫苗 OR U=乐儿德 OR U=九价人乳头瘤病毒疫苗 OR U=佳达修 OR U=依巴司韦格佐普韦 OR U=格佐普韦/依巴司韦 OR U=择必达 OR U=依托孕烯炔雌醇阴道环 OR U=舞悠 OR U=帕博利珠单抗 OR U=可瑞")
 
 
