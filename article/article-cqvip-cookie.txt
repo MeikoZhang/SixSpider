@@ -1,0 +1,11 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+qikan.cqvip.com	FALSE	/	FALSE		ASP.NET_SessionId	ns5dkfsbstg53y2tltklz1uf
+qikan.cqvip.com	FALSE	/	FALSE		LIBUSERCOOKIE	Oosn4ui+3LIAcpa/+sCLSLumqrc/XpZlqdxCkoqLXe888frrRhvRzCOVrla0ToPKV6Luj9NWHzwzKC24fAeMx7orTNZjIy9oG5qEoA8nJ4PkLiFK9YMoaeMPT//0+cTP5j3Qyzup711HZRD2teAHC/GYoETE1+D7xlFQ6TytIcsHTyOcxdjlMPZHEJ/nr8eZBxiYxUmkIJvCaCtUKeqiKrzERq/MVLncFbNsmiFRV1LsCaK1a1KMoiSryztwcIm+AyQfGjJ4mccXlSmCk+xuunS/ymN0rANZXV8QEWHWVIhEhSJwhULonh/8ujtw7dCRUchYjtu/N9Q0ks49AX7X6MwH+uvZnyjjx6Qoup6VkLMYn24qH6HN2g==
+qikan.cqvip.com	FALSE	/	FALSE		LIBUSERIDCOOKIE	19028277
+qikan.cqvip.com	FALSE	/	FALSE		LIBUSERNAMECOOKIE	447229719@qq.com
+qikan.cqvip.com	FALSE	/	FALSE		search_isEnable	1
+qikan.cqvip.com	FALSE	/	FALSE		skybug	ea4aa775b9af539f55ca5843428f034b
+qikan.cqvip.com	FALSE	/	FALSE		user_behavior_flag	2bb3cccf-1c24-4c40-805d-9f5082b35071
