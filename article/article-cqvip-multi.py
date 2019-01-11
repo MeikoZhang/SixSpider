@@ -1,3 +1,5 @@
+# coding=gbk
+
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -25,21 +27,21 @@ headers = {
 }
 
 
-# ç™»é™†ä¿¡æ¯
+# µÇÂ½ÐÅÏ¢
 data = {
     'Username': '447229719@qq.com',
     'Password': '33530912'
 }
 
-# md5è½¬åŒ–å¯†ç 
+# md5×ª»¯ÃÜÂë
 m2 = hashlib.md5()
 m2.update(data['Password'].encode('utf-8'))
 data['Password']=m2.hexdigest()
 
-# ä¸‹è½½æ–‡ä»¶å­˜å‚¨ç›®å½•
-file_dir = r"D:\æ–‡æ¡£"
+# ÏÂÔØÎÄ¼þ´æ´¢Ä¿Â¼
+file_dir = r"D:\ÎÄµµ\Î¬ÆÕÍø"
 
-# è¯·æ±‚çš„å…¨å±€session
+# ÇëÇóµÄÈ«¾Ösession
 session = requests.Session()
 cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
 # print(cookie_path)
@@ -48,7 +50,7 @@ cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
 def login():
     session.cookies = HC.MozillaCookieJar(filename=cookie_path)
     # session.cookies.save()
-    #  å¦‚æžœå­˜åœ¨cookiesæ–‡ä»¶ï¼Œåˆ™åŠ è½½ï¼Œå¦‚æžœä¸å­˜åœ¨åˆ™æç¤º
+    #  Èç¹û´æÔÚcookiesÎÄ¼þ£¬Ôò¼ÓÔØ£¬Èç¹û²»´æÔÚÔòÌáÊ¾
     try:
         session.cookies.load(ignore_discard=True, ignore_expires=True)
 
@@ -68,18 +70,18 @@ def login():
         r1 = session.get('http://qikan.cqvip.com/RegistLogin/CheckUserIslogin?'+str(random.random())
                          , headers=headers)
         # print(r1.json())
-        # ç™»é™†éªŒè¯
+        # µÇÂ½ÑéÖ¤
         is_login = r1.json().get('isLogined')
         if is_login:
-            print('å·²ç™»å½• ...cookieæœ‰æ•ˆ')
+            print('ÒÑµÇÂ¼ ...cookieÓÐÐ§')
             return
         else:
-            print('æœªç™»å½• ...å°è¯•ç™»é™†...')
+            print('Î´µÇÂ¼ ...³¢ÊÔµÇÂ½...')
     except Exception as e:
-        print('æœªæ‰¾åˆ°cookiesæ–‡ä»¶')
+        print('Î´ÕÒµ½cookiesÎÄ¼þ')
         print(traceback.format_exc())
 
-    # ç™»é™†æŽ¥å£
+    # µÇÂ½½Ó¿Ú
     login_data={
         'LoginUserName': data['Username'],
         'LoginUserPassword': data['Password'],
@@ -90,15 +92,15 @@ def login():
     for cookie_l in login_r.cookies:
         print(cookie_l.name, cookie_l.value)
     session.cookies.save(ignore_discard=True, ignore_expires=True)
-    print('ç™»é™†æˆåŠŸ ...ä¿å­˜cookie')
+    print('µÇÂ½³É¹¦ ...±£´æcookie')
 
 
 def get_total(key=None):
     if not key:
-        print('æ²¡æœ‰è®¾ç½®å…³é”®è¯ï¼ï¼ï¼')
+        print('Ã»ÓÐÉèÖÃ¹Ø¼ü´Ê£¡£¡£¡')
         return
 
-    # èŽ·å–æœç´¢åˆ—è¡¨
+    # »ñÈ¡ËÑË÷ÁÐ±í
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
         'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"1","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
@@ -112,26 +114,26 @@ def get_total(key=None):
     # print(result)
     total_str = result[0].attrs['value']
     if total_str:
-        print("==å…±æ‰¾åˆ°{}ç¯‡æ–‡ç« =========".format(total_str))
+        print("==¹²ÕÒµ½{}ÆªÎÄÕÂ=========".format(total_str))
         total = int(total_str)
     page_size = 20
     page_total = int((total + page_size - 1)/page_size)
-    print("==æ¯é¡µè®°å½•20ï¼Œå…±{}é¡µ=========".format(page_total))
+    print("==Ã¿Ò³¼ÇÂ¼20£¬¹²{}Ò³=========".format(page_total))
     for page in range(page_total):
-        print("å¼€å§‹èŽ·å–ç¬¬{}é¡µ....".format(page + 1))
+        print("¿ªÊ¼»ñÈ¡µÚ{}Ò³....".format(page + 1))
         get_list(key, str(page + 1))
-    print("ä»»åŠ¡å®Œæˆ ...")
+    print("ÈÎÎñÍê³É ...")
 
 
-# èŽ·å–æœç´¢åˆ—è¡¨
+# »ñÈ¡ËÑË÷ÁÐ±í
 def get_list(key=None, page="1"):
     if not key:
-        print('æ²¡æœ‰è®¾ç½®å…³é”®è¯ï¼ï¼ï¼')
+        print('Ã»ÓÐÉèÖÃ¹Ø¼ü´Ê£¡£¡£¡')
         return
 
-    # èŽ·å–æœç´¢åˆ—è¡¨ï¼Œæ ¹æ®æ¡ä»¶æ£€ç´¢
-    # å¹´ä»½ BeginYear : "2018", EndYear: "2019"
-    # æ›´æ–°æ—¶é—´ UpdateTimeType ï¼š 1/1ä¸ªæœˆå†… 2/ä¸‰ä¸ªæœˆå†… 3/åŠå¹´å†… 4/ä¸€å¹´å†… 5/å½“å¹´å†…
+    # »ñÈ¡ËÑË÷ÁÐ±í£¬¸ù¾ÝÌõ¼þ¼ìË÷
+    # Äê·Ý BeginYear : "2018", EndYear: "2019"
+    # ¸üÐÂÊ±¼ä UpdateTimeType £º 1/1¸öÔÂÄÚ 2/Èý¸öÔÂÄÚ 3/°ëÄêÄÚ 4/Ò»ÄêÄÚ 5/µ±ÄêÄÚ
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
         'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"'+page+'","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
@@ -144,15 +146,15 @@ def get_list(key=None, page="1"):
         i = 0
         for alink in alinks:
             i = i+1
-            # èŽ·å–æ–‡ç« åç§°title
+            # »ñÈ¡ÎÄÕÂÃû³Ætitle
             title = alink.select('dt a[target=_blank]')[0].get_text()
             article_a = alink.select('.article-source a')
             print(i, title, len(article_a))
 
-            # æ–‡ä»¶é‡å¤åŽ»é‡
+            # ÎÄ¼þÖØ¸´È¥ÖØ
             file_will_write = os.path.join(file_dir, title+".pdf")
             if os.path.exists(file_will_write):
-                print('\tæ–‡ä»¶å·²å­˜åœ¨ ... {}'.format(file_will_write))
+                print('\tÎÄ¼þÒÑ´æÔÚ ... {}'.format(file_will_write))
                 continue
 
             if len(article_a) > 1:
@@ -160,12 +162,12 @@ def get_list(key=None, page="1"):
 
                 article_click = article_a[1].attrs['onclick']
                 split = article_click.split('\'')
-                # èŽ·å–æ–‡ç« æ ‡è¯†
+                # »ñÈ¡ÎÄÕÂ±êÊ¶
                 article_id = split[1]
                 article_sg = split[3]
                 # print(article_id, article_sg)
 
-                # èŽ·å–æ–‡ç« æ˜¯å¦æ”¯ä»˜
+                # »ñÈ¡ÎÄÕÂÊÇ·ñÖ§¸¶
                 r2 = session.post('http://qikan.cqvip.com/Qikan/Article/GetArticleRight',
                                   data={
                                       'articleId': article_id
@@ -174,22 +176,22 @@ def get_list(key=None, page="1"):
                 # print(r2.json())
 
                 if r2.json()['RetValue']:
-                    print('\tæ–‡ç« å·²æ”¯ä»˜')
+                    print('\tÎÄÕÂÒÑÖ§¸¶')
                 else:
                     time.sleep(2)
-                    print('\tæ–‡ç« æœªæ”¯ä»˜ï¼Œå¼€å§‹æ”¯ä»˜è´¹ç”¨')
+                    print('\tÎÄÕÂÎ´Ö§¸¶£¬¿ªÊ¼Ö§¸¶·ÑÓÃ')
                     r_pay = session.post('http://qikan.cqvip.com/Qikan/UserPay/BalancePayment',
                                          data={
                                              'id': article_id
                                          },
                                          headers=headers)
                     print(r_pay.text)
-                    if r_pay.json().get("PromptMsg") != "æ”¯ä»˜æˆåŠŸ":
-                        print('\tæ–‡ç« æ”¯ä»˜å¤±è´¥!!!!!!!!!!!!!!!!!!!!!!!!')
-                        # åœæ­¢è¿è¡Œ
+                    if r_pay.json().get("PromptMsg") != "Ö§¸¶³É¹¦":
+                        print('\tÎÄÕÂÖ§¸¶Ê§°Ü!!!!!!!!!!!!!!!!!!!!!!!!')
+                        # Í£Ö¹ÔËÐÐ
                         break
 
-                # èŽ·å–æ–‡ç« ä¸‹è½½é“¾æŽ¥
+                # »ñÈ¡ÎÄÕÂÏÂÔØÁ´½Ó
                 r3 = session.post('http://qikan.cqvip.com/Qikan/Article/ArticleDown',
                                   data={
                                       'id': article_id,
@@ -201,7 +203,7 @@ def get_list(key=None, page="1"):
 
                 download_url = r3.json()['url']
                 if download_url:
-                    print('\tä¸‹è½½æ–‡ç« é“¾æŽ¥ {}'.format(download_url))
+                    print('\tÏÂÔØÎÄÕÂÁ´½Ó {}'.format(download_url))
                     download(download_url)
 
 
@@ -210,20 +212,20 @@ def download(download_url):
     if file_name:
         file2write = os.path.join(file_dir, file_name)
         if os.path.exists(file2write):
-            print('\tæ–‡ä»¶å·²å­˜åœ¨ ... {}'.format(file2write))
+            print('\tÎÄ¼þÒÑ´æÔÚ ... {}'.format(file2write))
         else:
             f = session.get(download_url)
-            # æ£€æµ‹ç¼–ç , èŽ·å–headerä¸­æ–‡æ–‡ä»¶å
+            # ¼ì²â±àÂë, »ñÈ¡headerÖÐÎÄÎÄ¼þÃû
             # file_name_str = str(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GB2312")
             # fileName = file_name_str.split('filename=')[1]
             # fileName = fileName.replace('"', '').replace("'", "")
             with open(file2write, "wb") as code:
                 code.write(f.content)
-            print('\tæ–‡ä»¶ä¸‹è½½å®Œæˆ ... {}'.format(file2write))
+            print('\tÎÄ¼þÏÂÔØÍê³É ... {}'.format(file2write))
 
 
-# get_list('U=ä¾æ‰˜è€ƒæ˜” OR U=å®‰åº·ä¿¡')
+# get_list('U=ÒÀÍÐ¿¼Îô OR U=°²¿µÐÅ')
 login()
-get_total("U=ä¾æ‰˜è€ƒæ˜” OR U=å®‰åº·ä¿¡  OR U=ä¾æ‰˜è€ƒæ˜” OR U=å®‰åº·ä¿¡ OR U=å¡æ³ŠèŠ¬å‡€ OR U=ç§‘èµ›æ–¯ OR U=æ°¯æ²™å¦ OR U=ç»œæ²™å¦ OR U=æ´›æ²™å¦ OR U=ç§‘ç´ äºš OR U=é˜¿ä»‘è†¦é…¸é’  OR U=é˜¿ä¼¦ç£·é…¸é’  OR U=ç¦å–„ç¾Ž OR U=æ°¯æ²™å¦é’¾æ°¢æ°¯å™»å—ª OR U=æµ·æ·äºš OR U=åŽ„ä»–åŸ¹å— OR U=è‰¾ä»–åŸ¹å— OR U=æ€¡ä¸‡ä¹‹ OR U=éžé‚£é›„èƒº OR U=éžé‚£å¸æ OR U=éžé‚£ç”¾èƒº OR U=ä¿æ³•æ­¢ OR U=éžé‚£é›„èƒº OR U=éžé‚£å¸æ OR U=éžé‚£ç”¾èƒº OR U=ä¿åˆ—æ²» OR U=ä¾é‚£æ™®åˆ© OR U=æ©çº³æ™®åˆ© OR U=è‹¯é…¯ä¸™è„¯é…¸ OR U=æ‚¦å®å®š OR U=å¡å·¦åŒå¤šå·´ OR U=æ¯å® OR U=å­Ÿé²å¸ç‰¹ OR U=å­Ÿé²æ–¯ç‰¹ OR U=é¡ºå°”å® OR U=é¡ºè€³å® OR U=äºšèƒºåŸ¹å— OR U=äºšå®‰åŸ¹å— OR U=æ³°èƒ½ OR U=è¾›ä¼ä»–æ±€ OR U=æ–°ä¼ä»–æ±€ OR U=èˆ’é™ä¹‹ OR U=èˆ’é™è„‚ OR U=æ‹‰æ›¿æ‹‰éŸ¦ OR U=è‰¾ç”Ÿç‰¹ OR U=23ä»·è‚ºç‚ŽçƒèŒå¤šç³–ç–«è‹— OR U=çº½èŽ«æ³• OR U=ç”²åž‹è‚ç‚Žç­æ´»ç–«è‹— OR U=äººäºŒå€ä½“ç”²åž‹è‚ç‚Žç­æ´»ç–«è‹— OR U=ç»´åº·ç‰¹ OR U=è¥¿æ ¼åˆ—æ±€ OR U=è¥¿ä»–åˆ—æ±€ OR U=æ·è¯ºç»´ OR U=è¥¿æ ¼åˆ—æ±€äºŒç”²åŒèƒ OR U=è¥¿æ ¼åˆ—æ±€äºŒç”²åŒèƒ OR U=æ·è¯ºè¾¾  OR U=ä¾æŠ˜éº¦å¸ƒ OR U=ä¾æ›¿ç±³è´ OR U=ç›Šé€‚çº¯ OR U=é˜¿ä»‘è†¦é…¸é’ ç»´D3 OR U=ç¦ç¾ŽåŠ  OR U=ç¦ç¾Žä½³ OR U=é˜¿ç‘žåŒ¹å¦ OR U=é˜¿ç‘žå¡å¦ OR U=æ„ç¾Ž OR U=åœ°æ°¯é›·ä»–å®š OR U=æ©ç†æ€ OR U=ç³ é…¸èŽ«ç±³æ¾ OR U=å†…èˆ’æ‹¿ OR U=å¤æ–¹å€ä»–ç±³æ¾ OR U=å¾—å®æ¾ OR U=é‡ç»„ä¿ƒåµæ³¡ç´ Î² OR U=æ™®åˆ©åº· OR U=ä¾æŠ˜éº¦å¸ƒè¾›ä¼ä»–æ±€ OR U=ä¾æ›¿ç±³è´è¾›ä¼ä»–æ±€ OR U=è‘†è‡³èƒ½ OR U=é‡ç»„äººå¹²æ‰°ç´ Î±-2b OR U=ç”˜ä¹èƒ½ OR U=èšä¹™äºŒé†‡å¹²æ‰°ç´ Î±-2b OR U=ä½©ä¹èƒ½ OR U=æ›¿èŽ«å”‘èƒº OR U=æ³°é“ OR U=åŽ»æ°§å­•çƒ¯ç‚”é›Œé†‡ OR U=å¦ˆå¯Œéš† OR U=åŽ»æ°§å­•çƒ¯ç‚”é›Œé†‡ OR U=ç¾Žæ¬£ä¹ OR U=æ›¿å‹ƒé¾™ OR U=æ›¿å‹ƒéš† OR U=åˆ©ç»´çˆ± OR U=åä¸€é…¸ç¾é…® OR U=å®‰ç‰¹å°” OR U=ç½—åº“æº´é“µ OR U=çˆ±å¯æ¾ OR U=è‚Œæ¾ç›‘æµ‹ä»ª OR U=ç±³æ°®å¹³ OR U=ç‘žç¾Žéš† OR U=ä¾æ‰˜å­•çƒ¯ OR U=ä¾ä¼´ä¾¬ OR U=æ³Šæ²™åº·å”‘ OR U=è¯ºç§‘é£ž OR U=åŠ å°¼ç‘žå…‹ OR U=æ®´åŠ åˆ© OR U=è¾¾æ‰˜éœ‰ç´  OR U=å…‹å¿…ä¿¡ OR U=èˆ’æ›´è‘¡ç³–é’  OR U=å¸ƒç‘žäº­ OR U=å››ä»·äººä¹³å¤´ç˜¤ç—…æ¯’ç–«è‹— OR U=ä½³è¾¾ä¿® OR U=äº”ä»·é‡é…è½®çŠ¶ç—…æ¯’å‡æ¯’æ´»ç–«è‹— OR U=ä¹å„¿å¾· OR U=ä¹ä»·äººä¹³å¤´ç˜¤ç—…æ¯’ç–«è‹— OR U=ä½³è¾¾ä¿® OR U=ä¾å·´å¸éŸ¦æ ¼ä½æ™®éŸ¦ OR U=æ ¼ä½æ™®éŸ¦/ä¾å·´å¸éŸ¦ OR U=æ‹©å¿…è¾¾ OR U=ä¾æ‰˜å­•çƒ¯ç‚”é›Œé†‡é˜´é“çŽ¯ OR U=èˆžæ‚  OR U=å¸•åšåˆ©ç å•æŠ— OR U=å¯ç‘ž")
+get_total("U=ÒÀÍÐ¿¼Îô OR U=°²¿µÐÅ  OR U=ÒÀÍÐ¿¼Îô OR U=°²¿µÐÅ OR U=¿¨²´·Ò¾» OR U=¿ÆÈüË¹ OR U=ÂÈÉ³Ì¹ OR U=ÂçÉ³Ì¹ OR U=ÂåÉ³Ì¹ OR U=¿ÆËØÑÇ OR U=°¢ÂØì¢ËáÄÆ OR U=°¢Â×Á×ËáÄÆ OR U=¸£ÉÆÃÀ OR U=ÂÈÉ³Ì¹¼ØÇâÂÈàçàº OR U=º£½ÝÑÇ OR U=¶òËûÅàÄÏ OR U=°¬ËûÅàÄÏ OR U=âùÍòÖ® OR U=·ÇÄÇÐÛ°· OR U=·ÇÄÇË¾Ìá OR U=·ÇÄÇçÞ°· OR U=±£·¨Ö¹ OR U=·ÇÄÇÐÛ°· OR U=·ÇÄÇË¾Ìá OR U=·ÇÄÇçÞ°· OR U=±£ÁÐÖÎ OR U=ÒÀÄÇÆÕÀû OR U=¶÷ÄÉÆÕÀû OR U=±½õ¥±û¸¬Ëá OR U=ÔÃÄþ¶¨ OR U=¿¨×óË«¶à°Í OR U=Ï¢Äþ OR U=ÃÏÂ³Ë¾ÌØ OR U=ÃÏÂ³Ë¹ÌØ OR U=Ë³¶ûÄþ OR U=Ë³¶úÄþ OR U=ÑÇ°·ÅàÄÏ OR U=ÑÇ°²ÅàÄÏ OR U=Ì©ÄÜ OR U=ÐÁ·¥ËûÍ¡ OR U=ÐÂ·¥ËûÍ¡ OR U=Êæ½µÖ® OR U=Êæ½µÖ¬ OR U=À­ÌæÀ­Î¤ OR U=°¬ÉúÌØ OR U=23¼Û·ÎÑ×Çò¾ú¶àÌÇÒßÃç OR U=Å¦Äª·¨ OR U=¼×ÐÍ¸ÎÑ×Ãð»îÒßÃç OR U=ÈË¶þ±¶Ìå¼×ÐÍ¸ÎÑ×Ãð»îÒßÃç OR U=Î¬¿µÌØ OR U=Î÷¸ñÁÐÍ¡ OR U=Î÷ËûÁÐÍ¡ OR U=½ÝÅµÎ¬ OR U=Î÷¸ñÁÐÍ¡¶þ¼×Ë«ëÒ OR U=Î÷¸ñÁÐÍ¡¶þ¼×Ë«ëÒ OR U=½ÝÅµ´ï  OR U=ÒÀÕÛÂó²¼ OR U=ÒÀÌæÃ×±´ OR U=ÒæÊÊ´¿ OR U=°¢ÂØì¢ËáÄÆÎ¬D3 OR U=¸£ÃÀ¼Ó OR U=¸£ÃÀ¼Ñ OR U=°¢ÈðÆ¥Ì¹ OR U=°¢ÈðßÁÌ¹ OR U=ÒâÃÀ OR U=µØÂÈÀ×Ëû¶¨ OR U=¶÷ÀíË¼ OR U=¿·ËáÄªÃ×ËÉ OR U=ÄÚÊæÄÃ OR U=¸´·½±¶ËûÃ×ËÉ OR U=µÃ±¦ËÉ OR U=ÖØ×é´ÙÂÑÅÝËØ¦Â OR U=ÆÕÀû¿µ OR U=ÒÀÕÛÂó²¼ÐÁ·¥ËûÍ¡ OR U=ÒÀÌæÃ×±´ÐÁ·¥ËûÍ¡ OR U=ÝáÖÁÄÜ OR U=ÖØ×éÈË¸ÉÈÅËØ¦Á-2b OR U=¸ÊÀÖÄÜ OR U=¾ÛÒÒ¶þ´¼¸ÉÈÅËØ¦Á-2b OR U=ÅåÀÖÄÜ OR U=ÌæÄªßò°· OR U=Ì©µÀ OR U=È¥ÑõÔÐÏ©È²´Æ´¼ OR U=Âè¸»Â¡ OR U=È¥ÑõÔÐÏ©È²´Æ´¼ OR U=ÃÀÐÀÀÖ OR U=Ìæ²ªÁú OR U=Ìæ²ªÂ¡ OR U=ÀûÎ¬°® OR U=Ê®Ò»ËáØºÍª OR U=°²ÌØ¶û OR U=ÂÞ¿âäåï§ OR U=°®¿ÉËÉ OR U=¼¡ËÉ¼à²âÒÇ OR U=Ã×µªÆ½ OR U=ÈðÃÀÂ¡ OR U=ÒÀÍÐÔÐÏ© OR U=ÒÀ°éÙ¯ OR U=²´É³¿µßò OR U=Åµ¿Æ·É OR U=¼ÓÄáÈð¿Ë OR U=Å¹¼ÓÀû OR U=´ïÍÐÃ¹ËØ OR U=¿Ë±ØÐÅ OR U=Êæ¸üÆÏÌÇÄÆ OR U=²¼ÈðÍ¤ OR U=ËÄ¼ÛÈËÈéÍ·Áö²¡¶¾ÒßÃç OR U=¼Ñ´ïÐÞ OR U=Îå¼ÛÖØÅäÂÖ×´²¡¶¾¼õ¶¾»îÒßÃç OR U=ÀÖ¶ùµÂ OR U=¾Å¼ÛÈËÈéÍ·Áö²¡¶¾ÒßÃç OR U=¼Ñ´ïÐÞ OR U=ÒÀ°ÍË¾Î¤¸ñ×ôÆÕÎ¤ OR U=¸ñ×ôÆÕÎ¤/ÒÀ°ÍË¾Î¤ OR U=Ôñ±Ø´ï OR U=ÒÀÍÐÔÐÏ©È²´Æ´¼ÒõµÀ»· OR U=ÎèÓÆ OR U=ÅÁ²©ÀûÖéµ¥¿¹ OR U=¿ÉÈð")
 
 
