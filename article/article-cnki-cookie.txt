@@ -1,0 +1,9 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+.cnki.net	TRUE	/	FALSE	4702873730	Ecp_ClientId	6190111174800429384
+.cnki.net	TRUE	/	FALSE	1547459330	Ecp_IpLoginFail	190111180.154.19.189
+.cnki.net	TRUE	/	FALSE	1547804933	Ecp_LoginStuts	{"IsAutoLogin":true,"UserName":"sherry.huang@goal-noah.com","ShowName":"sherry.huang%40goal-noah.com","UserType":"jf","r":"BR1p7F"}
+.cnki.net	TRUE	/	FALSE	1547804933	c_m_LinID	LinID=WEEvREcwSlJHSldTTEYzVnB3WXI5WDlnUkxqcEZLVkNVZXo3c0JPWWg0UT0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&ot=01/18/2019 17:48:53
+.cnki.net	TRUE	/	FALSE	1547804933	c_m_expire	2019-01-18 17:48:53
