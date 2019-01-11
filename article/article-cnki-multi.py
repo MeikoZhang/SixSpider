@@ -382,8 +382,8 @@ def print_cookie():
 
 
 login()
-# get_total(
-#     "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思")
+get_total(
+    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思")
 get_total(
     "FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=重组人干扰素α-2b OR FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
 
