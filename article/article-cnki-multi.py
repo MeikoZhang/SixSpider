@@ -269,7 +269,6 @@ def download(title, down_url):
             if r_pay.status_code == 302:
                 print('\t文章支付完成 ...{}'.format(r_pay.headers))
                 # 返回的是文件流
-
                 # 循环直到r = 200, 重定向到最后的下载链接，
                 r = r_pay
                 try:
@@ -287,21 +286,6 @@ def download(title, down_url):
 
                 # 保存文件
                 save_file(title, r)
-
-                # # detract
-                # down_headers['Host'] = get_host(r_pay.headers.get('Location'))['host']
-                # r_do = session.get(r_pay.headers.get('Location'), headers=down_headers, allow_redirects=False)
-                #
-                # # pdfdownloadnew
-                # down_headers['Host'] = get_host(r_do.headers.get('Location'))['host']
-                # r_new = session.get(r_do.headers.get('Location'), headers=down_headers, allow_redirects=False)
-                #
-                # # getpdfdownload
-                # down_headers['Host'] = get_host(r_new.headers.get('Location'))['host']
-                # r_get = session.get(r_new.headers.get('Location'), headers=down_headers, allow_redirects=False)
-                #
-                # # 保存文件
-                # save_file(r_get)
             else:
                 print('\t文章支付无效 ...{}'.format(r_pay.headers))
                 print('\t文章链接 ...{}'.format('http://kns.cnki.net/kns' + down_url[2:]))
@@ -326,17 +310,6 @@ def download(title, down_url):
 
             # 保存文件
             save_file(title, r)
-
-            # # detract
-            # down_headers['Host'] = get_host(r_pubdownload.headers.get('Location'))['host']
-            # r_do = session.get(r_pubdownload.headers.get('Location'), headers=down_headers, allow_redirects=False)
-            #
-            # # pdfdownloadnew
-            # down_headers['Host'] = get_host(r_do.headers.get('Location'))['host']
-            # r_new = session.get(r_do.headers.get('Location'), headers=down_headers, allow_redirects=False)
-            #
-            # # 保存文件
-            # save_file(r_new)
     else:
         print('\t下载文章连接无效，{}'.format(loc_pubdownload))
 

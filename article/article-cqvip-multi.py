@@ -41,6 +41,14 @@ data['Password']=m2.hexdigest()
 # 下载文件存储目录
 file_dir = r"D:\文档\维普网"
 
+file_dir_files = os.listdir(file_dir)
+# 已下载文件列表
+file_m = r"D:\文档\维普网目录.txt"
+files_m = []
+for f_file in open(file_m, "r"):
+    # print(i.strip())
+    files_m.append(f_file.split(",")[0])
+
 # 请求的全局session
 session = requests.Session()
 cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
@@ -82,7 +90,7 @@ def login():
         print(traceback.format_exc())
 
     # 登陆接口
-    login_data={
+    login_data = {
         'LoginUserName': data['Username'],
         'LoginUserPassword': data['Password'],
         'LoginType': 'normallogin'
@@ -103,7 +111,7 @@ def get_total(key=None):
     # 获取搜索列表
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
-        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"1","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
+        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2019","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"1","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
     }
     r = session.post(url, data=list_data, headers=headers)
     r.encoding = 'utf-8'
@@ -136,7 +144,7 @@ def get_list(key=None, page="1"):
     # 更新时间 UpdateTimeType ： 1/1个月内 2/三个月内 3/半年内 4/一年内 5/当年内
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
-        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"'+page+'","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
+        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2019","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"'+page+'","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
     }
     r = session.post(url, data=list_data, headers=headers)
     r.encoding = 'utf-8'
@@ -152,11 +160,12 @@ def get_list(key=None, page="1"):
             print(i, title, len(article_a))
 
             # 文件重复去重
-            file_will_write = os.path.join(file_dir, title+".pdf")
-            if os.path.exists(file_will_write):
-                print('\t文件已存在 ... {}'.format(file_will_write))
+            if title in files_m:
+                print('\t文件已存在目录列表 ... {}'.format(os.path.join(file_dir, title)))
                 continue
 
+            # 文件不存在，开始下载
+            print('\t文件不存在开始下载 ... {}'.format(os.path.join(file_dir, title)))
             if len(article_a) > 1:
                 time.sleep(3)
 
@@ -204,15 +213,20 @@ def get_list(key=None, page="1"):
                 download_url = r3.json()['url']
                 if download_url:
                     print('\t下载文章链接 {}'.format(download_url))
-                    download(download_url)
+                    download(title, download_url)
+            else:
+                print('\t文件下载链接获取失败 ... {}'.format(article_a))
 
 
-def download(download_url):
+def download(title, download_url):
     file_name = download_url.split('FileName=')[1]
     if file_name:
         file2write = os.path.join(file_dir, file_name)
         if os.path.exists(file2write):
             print('\t文件已存在 ... {}'.format(file2write))
+            # 更新目录
+            with open(file_m, "a") as fm:
+                fm.write(title + "," + file2write + "\n")
         else:
             f = session.get(download_url)
             # 检测编码, 获取header中文文件名
@@ -221,7 +235,10 @@ def download(download_url):
             # fileName = fileName.replace('"', '').replace("'", "")
             with open(file2write, "wb") as code:
                 code.write(f.content)
+                # 更新目录
             print('\t文件下载完成 ... {}'.format(file2write))
+            with open(file_m, "a") as fm:
+                fm.write(title + "," + file2write + "\n")
 
 
 # get_list('U=依托考昔 OR U=安康信')
