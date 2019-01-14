@@ -2,8 +2,8 @@
 # http://curl.haxx.se/rfc/cookie_spec.html
 # This is a generated file!  Do not edit.
 
-.cnki.net	TRUE	/	FALSE	4702903489	Ecp_ClientId	7190112020400045790
-.cnki.net	TRUE	/	FALSE	1547489089	Ecp_IpLoginFail	190112123.157.129.56
-.cnki.net	TRUE	/	FALSE	1547231092	Ecp_LoginStuts	{"IsAutoLogin":false,"UserName":"sherry.huang@goal-noah.com","ShowName":"sherry.huang%40goal-noah.com","UserType":"jf","r":"adUjae"}
-.cnki.net	TRUE	/	FALSE	1547231092	c_m_LinID	LinID=WEEvREcwSlJHSldTTEYzU3EydDRPaFp5dEtPMUgyeis3S0xiVmdvcWdFYz0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&ot=01/12/2019 02:24:52
-.cnki.net	TRUE	/	FALSE	1547231092	c_m_expire	2019-01-12 02:24:52
+.cnki.net	TRUE	/	FALSE	4703130216	Ecp_ClientId	3190114170302988980
+.cnki.net	TRUE	/	FALSE	1547715816	Ecp_IpLoginFail	190114180.154.19.189
+.cnki.net	TRUE	/	FALSE	1547457819	Ecp_LoginStuts	{"IsAutoLogin":false,"UserName":"sherry.huang@goal-noah.com","ShowName":"sherry.huang%40goal-noah.com","UserType":"jf","r":"Q1m7Tl"}
+.cnki.net	TRUE	/	FALSE	1547457819	c_m_LinID	LinID=WEEvREcwSlJHSldTTEYzU3EydDRPaFowSUhmOEZtK0pwREE3c3NUUmdqWT0=$9A4hF_YAuvQ5obgVAqNKPCYcEjKensW4IQMovwHtwkF4VYPoHbKxJw!!&ot=01/14/2019 17:23:39
+.cnki.net	TRUE	/	FALSE	1547457819	c_m_expire	2019-01-14 17:23:39
