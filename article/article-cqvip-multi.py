@@ -4,10 +4,39 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
+import sys
+import re
 import http.cookiejar as HC
 import random
 import traceback
 import hashlib
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
+# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
+base_path = r"E:\文档"
+
+log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
+formatter = logging.Formatter(log_fmt)
+
+# 控制台log配置
+# 默认是sys.stderr
+log_console_handler = logging.StreamHandler(sys.stdout)
+log_console_handler.setLevel(logging.INFO)
+log_console_handler.setFormatter(formatter)
+
+# 文件log配置
+log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article\cqvip_run.log"), when="D", interval=1, backupCount=7)
+log_file_handler.setLevel(logging.INFO)
+log_file_handler.setFormatter(formatter)
+log_file_handler.suffix = "%Y-%m-%d_%H-%M.log"
+log_file_handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}.log$")
+
+# log初始化
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+log.addHandler(log_file_handler)
+log.addHandler(log_console_handler)
 
 
 headers = {
@@ -39,11 +68,10 @@ m2.update(data['Password'].encode('utf-8'))
 data['Password']=m2.hexdigest()
 
 # 下载文件存储目录
-file_dir = r"D:\文档\维普网"
-
+file_dir = os.path.join(base_path, "维普网")
 file_dir_files = os.listdir(file_dir)
 # 已下载文件列表
-file_m = r"D:\文档\维普网目录.txt"
+file_m = os.path.join(base_path, "维普网目录.txt")
 files_m = []
 for f_file in open(file_m, "r"):
     # print(i.strip())
@@ -51,7 +79,7 @@ for f_file in open(file_m, "r"):
 
 # 请求的全局session
 session = requests.Session()
-cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
+cookie_path = os.path.join(base_path, r"article\article-cqvip-cookie.txt")
 # print(cookie_path)
 
 
@@ -74,7 +102,7 @@ def login():
         for cookie in session.cookies:
             # print(cookie.name, cookie.value)
             cookie_str = cookie_str + cookie.name + "=" + cookie.value + ";"
-        print(cookie_str)
+        # log.info(cookie_str)
         headers['Cookie'] = cookie_str
 
         r1 = session.get('http://qikan.cqvip.com/RegistLogin/CheckUserIslogin?'+str(random.random())
@@ -83,13 +111,13 @@ def login():
         # 登陆验证
         is_login = r1.json().get('isLogined')
         if is_login:
-            print('已登录 ...cookie有效')
+            log.info('已登录 ...cookie有效')
             return
         else:
-            print('未登录 ...尝试登陆...')
+            log.info('未登录 ...尝试登陆...')
     except Exception as e:
-        print('未找到cookies文件')
-        print(traceback.format_exc())
+        log.info('未找到cookies文件')
+        log.info(traceback.format_exc())
 
     # 登陆接口
     login_data = {
@@ -99,15 +127,15 @@ def login():
     }
     login_r = session.post('http://qikan.cqvip.com/RegistLogin/Login', data=login_data, headers=headers)
     # print(login_r.json())
-    for cookie_l in login_r.cookies:
-        print(cookie_l.name, cookie_l.value)
+    # for cookie_l in login_r.cookies:
+    #     print(cookie_l.name, cookie_l.value)
     session.cookies.save(ignore_discard=True, ignore_expires=True)
-    print('登陆成功 ...保存cookie')
+    log.info('登陆成功 ...保存cookie')
 
 
 def get_total(key=None):
     if not key:
-        print('没有设置关键词！！！')
+        log.info('没有设置关键词！！！')
         return
 
     # 获取搜索列表
@@ -124,15 +152,18 @@ def get_total(key=None):
     # print(result)
     total_str = result[0].attrs['value']
     if total_str:
-        print("==共找到{}篇文章=========".format(total_str))
+        log.info("==共找到{}篇文章=========".format(total_str))
         total = int(total_str)
+    else:
+        log.info("文章总数量没有查找到！！！！".format(total_str))
+        exit(0)
     page_size = 20
     page_total = int((total + page_size - 1)/page_size)
-    print("==每页记录20，共{}页=========".format(page_total))
+    log.info("==每页记录20，共{}页=========".format(page_total))
     for page in range(page_total):
-        print("开始获取第{}页....".format(page + 1))
+        log.info("开始获取第{}页....".format(page + 1))
         get_list(key, str(page + 1))
-    print("任务完成 ...")
+    log.info("任务完成 ...")
 
 
 # 获取搜索列表
@@ -159,15 +190,15 @@ def get_list(key=None, page="1"):
             # 获取文章名称title
             title = alink.select('dt a[target=_blank]')[0].get_text()
             article_a = alink.select('.article-source a')
-            print(i, title, len(article_a))
+            log.info("{},{},{},".format(i, title, len(article_a)))
 
             # 文件重复去重
             if title in files_m:
-                print('\t文件已存在目录列表 ... {}'.format(os.path.join(file_dir, title)))
+                log.info('\t文件已存在目录列表 ... {}'.format(os.path.join(file_dir, title)))
                 continue
 
             # 文件不存在，开始下载
-            print('\t文件不存在开始下载 ... {}'.format(os.path.join(file_dir, title)))
+            log.info('\t文件不存在开始下载 ... {}'.format(os.path.join(file_dir, title)))
             if len(article_a) > 1:
                 time.sleep(3)
 
@@ -187,18 +218,18 @@ def get_list(key=None, page="1"):
                 # print(r2.json())
 
                 if r2.json()['RetValue']:
-                    print('\t文章已支付')
+                    log.info('\t文章已支付')
                 else:
                     time.sleep(2)
-                    print('\t文章未支付，开始支付费用')
+                    log.info('\t文章未支付，开始支付费用')
                     r_pay = session.post('http://qikan.cqvip.com/Qikan/UserPay/BalancePayment',
                                          data={
                                              'id': article_id
                                          },
                                          headers=headers)
-                    print(r_pay.text)
+                    log.info(r_pay.text)
                     if r_pay.json().get("PromptMsg") != "支付成功":
-                        print('\t文章支付失败!!!!!!!!!!!!!!!!!!!!!!!!')
+                        log.info('\t文章支付失败!!!!!!!!!!!!!!!!!!!!!!!!')
                         # 停止运行
                         break
 
@@ -214,10 +245,10 @@ def get_list(key=None, page="1"):
 
                 download_url = r3.json()['url']
                 if download_url:
-                    print('\t下载文章链接 {}'.format(download_url))
+                    log.info('\t下载文章链接 {}'.format(download_url))
                     download(title, download_url)
             else:
-                print('\t文件下载链接获取失败 ... {}'.format(article_a))
+                log.info('\t文件下载链接获取失败 ... {}'.format(article_a))
 
 
 def download(title, download_url):
@@ -225,7 +256,7 @@ def download(title, download_url):
     if file_name:
         file2write = os.path.join(file_dir, file_name)
         if os.path.exists(file2write):
-            print('\t文件已存在 ... {}'.format(file2write))
+            log.info('\t文件已存在 ... {}'.format(file2write))
             # 更新目录
             with open(file_m, "a") as fm:
                 fm.write(title + "," + file2write + "\n")
@@ -238,7 +269,7 @@ def download(title, download_url):
             with open(file2write, "wb") as code:
                 code.write(f.content)
                 # 更新目录
-            print('\t文件下载完成 ... {}'.format(file2write))
+            log.info('\t文件下载完成 ... {}'.format(file2write))
             with open(file_m, "a") as fm:
                 fm.write(title + "," + file2write + "\n")
 
@@ -246,5 +277,3 @@ def download(title, download_url):
 # get_list('U=依托考昔 OR U=安康信')
 login()
 get_total("U=依托考昔 OR U=安康信  OR U=依托考昔 OR U=安康信 OR U=卡泊芬净 OR U=科赛斯 OR U=氯沙坦 OR U=络沙坦 OR U=洛沙坦 OR U=科素亚 OR U=阿仑膦酸钠 OR U=阿伦磷酸钠 OR U=福善美 OR U=氯沙坦钾氢氯噻嗪 OR U=海捷亚 OR U=厄他培南 OR U=艾他培南 OR U=怡万之 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保法止 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保列治 OR U=依那普利 OR U=恩纳普利 OR U=苯酯丙脯酸 OR U=悦宁定 OR U=卡左双多巴 OR U=息宁 OR U=孟鲁司特 OR U=孟鲁斯特 OR U=顺尔宁 OR U=顺耳宁 OR U=亚胺培南 OR U=亚安培南 OR U=泰能 OR U=辛伐他汀 OR U=新伐他汀 OR U=舒降之 OR U=舒降脂 OR U=拉替拉韦 OR U=艾生特 OR U=23价肺炎球菌多糖疫苗 OR U=纽莫法 OR U=甲型肝炎灭活疫苗 OR U=人二倍体甲型肝炎灭活疫苗 OR U=维康特 OR U=西格列汀 OR U=西他列汀 OR U=捷诺维 OR U=西格列汀二甲双胍 OR U=西格列汀二甲双胍 OR U=捷诺达  OR U=依折麦布 OR U=依替米贝 OR U=益适纯 OR U=阿仑膦酸钠维D3 OR U=福美加 OR U=福美佳 OR U=阿瑞匹坦 OR U=阿瑞吡坦 OR U=意美 OR U=地氯雷他定 OR U=恩理思 OR U=糠酸莫米松 OR U=内舒拿 OR U=复方倍他米松 OR U=得宝松 OR U=重组促卵泡素β OR U=普利康 OR U=依折麦布辛伐他汀 OR U=依替米贝辛伐他汀 OR U=葆至能 OR U=重组人干扰素α-2b OR U=甘乐能 OR U=聚乙二醇干扰素α-2b OR U=佩乐能 OR U=替莫唑胺 OR U=泰道 OR U=去氧孕烯炔雌醇 OR U=妈富隆 OR U=去氧孕烯炔雌醇 OR U=美欣乐 OR U=替勃龙 OR U=替勃隆 OR U=利维爱 OR U=十一酸睾酮 OR U=安特尔 OR U=罗库溴铵 OR U=爱可松 OR U=肌松监测仪 OR U=米氮平 OR U=瑞美隆 OR U=依托孕烯 OR U=依伴侬 OR U=泊沙康唑 OR U=诺科飞 OR U=加尼瑞克 OR U=殴加利 OR U=达托霉素 OR U=克必信 OR U=舒更葡糖钠 OR U=布瑞亭 OR U=四价人乳头瘤病毒疫苗 OR U=佳达修 OR U=五价重配轮状病毒减毒活疫苗 OR U=乐儿德 OR U=九价人乳头瘤病毒疫苗 OR U=佳达修 OR U=依巴司韦格佐普韦 OR U=格佐普韦/依巴司韦 OR U=择必达 OR U=依托孕烯炔雌醇阴道环 OR U=舞悠 OR U=帕博利珠单抗 OR U=可瑞")
-
-

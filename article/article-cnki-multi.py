@@ -15,18 +15,20 @@ import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
+base_path = r"E:\文档"
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
 
 # 控制台log配置
-#默认是sys.stderr
-log_console_handler = logging.StreamHandler(sys.stderr)
+# 默认是sys.stderr
+log_console_handler = logging.StreamHandler(sys.stdout)
 log_console_handler.setLevel(logging.INFO)
 log_console_handler.setFormatter(formatter)
 
 # 文件log配置
-log_file_handler = TimedRotatingFileHandler(filename="cnki_run.log", when="D", interval=1, backupCount=7)
+log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article\cnki_run.log"), when="D", interval=1, backupCount=7)
 log_file_handler.setLevel(logging.INFO)
 log_file_handler.setFormatter(formatter)
 log_file_handler.suffix = "%Y-%m-%d_%H-%M.log"
@@ -36,6 +38,7 @@ log_file_handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}.log$")
 log = logging.getLogger()
 log.setLevel(logging.INFO)
 log.addHandler(log_file_handler)
+log.addHandler(log_console_handler)
 
 
 headers = {
@@ -57,7 +60,6 @@ data = {
 }
 
 # 下载文件存储目录
-base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
 file_dir = os.path.join(base_path, "中国知网")
 file_dir_files = os.listdir(file_dir)
 # 已下载文件列表
@@ -72,7 +74,8 @@ for f_file in open(file_m, "r"):
 # 请求的全局session
 session = requests.Session()
 
-cookie_path = os.path.join(os.getcwd(), 'article-cnki-cookie.txt')
+cookie_path = os.path.join(base_path, r"article\article-cnki-cookie.txt")
+
 session.cookies = HC.MozillaCookieJar(filename=cookie_path)
 
 session.get('http://www.cnki.net/', headers=headers)
