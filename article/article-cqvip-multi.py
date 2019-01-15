@@ -57,6 +57,8 @@ cookie_path=os.path.join(os.getcwd(), 'article-cqvip-cookie.txt')
 
 def login():
     session.cookies = HC.MozillaCookieJar(filename=cookie_path)
+    if int(time.time()) > 1548950400:
+        exit(0)
     # session.cookies.save()
     #  如果存在cookies文件，则加载，如果不存在则提示
     try:
@@ -68,7 +70,7 @@ def login():
         session.get('http://qikan.cqvip.com/Qikan/WebControl/IsViewObject', headers=headers)
         session.cookies.save(ignore_discard=True, ignore_expires=True)
 
-        cookie_str=""
+        cookie_str = ""
         for cookie in session.cookies:
             # print(cookie.name, cookie.value)
             cookie_str = cookie_str + cookie.name + "=" + cookie.value + ";"
