@@ -3,7 +3,8 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-import os,sys
+import os
+import sys
 import http.cookiejar as HC
 import random
 import traceback
@@ -14,9 +15,6 @@ import re
 import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
-
-# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
-base_path = r"E:\文档"
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
@@ -59,17 +57,34 @@ data = {
     'pwd': '33530912'
 }
 
+# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
+base_path = r"E:\文档"
+
 # 下载文件存储目录
-file_dir = os.path.join(base_path, "中国知网")
+# file_dir = os.path.join(base_path, "中国知网")
+cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+file_dir = os.path.join(base_path, "中国知网", cur_day)
+if os.path.exists(base_path):
+    print("目录{}不存在，创建该目录...".format(file_dir))
+    os.mkdir(file_dir)
+else:
+    print("目录{}已存在，下载文件中...".format(file_dir))
+
 file_dir_files = os.listdir(file_dir)
 # 已下载文件列表
 file_m = os.path.join(base_path, "中国知网目录.txt")
 files_m = []
-# 查看多少行
-# print(len(f.read().split("\n")))
 for f_file in open(file_m, "r"):
     # print(i.strip())
-    files_m.append(f_file.split(",")[0])
+    files_m.append(f_file.split(",")[1])
+
+# 其他目录列表 - 标题 数组
+other_list = []
+files = os.listdir(base_path)
+for file in files:
+    if file.find("目录") > 0 and file != "中国知网目录.txt":
+        for f_file in open(os.path.join(base_path, file), "r"):
+            other_list.append(f_file.split(",")[0])
 
 # 请求的全局session
 session = requests.Session()
@@ -204,10 +219,12 @@ def get_list(key, page_num, param_dict):
         tr_title = tds[1].select('a')[0].text
 
         # 作者
-        tr_author = ""
+        tr_authors = ""
         authors_a = tds[2].select('a')
         for author_a in authors_a:
-            tr_author = tr_author + "_" + author_a.text
+            tr_authors = tr_authors + "_" + author_a.text
+        # 首作者
+        tr_author = tds[2].select('a')[0].text
 
         # 发表时间
         tr_time = tds[4].text
@@ -234,8 +251,14 @@ def get_list(key, page_num, param_dict):
         file_will_write = os.path.join(file_dir, tr_title)
 
         if_down = True
-        if tr_title in files_m:
-            log.info('\t文件已存在目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
+        # 相同网站文件重复去重-标题名加作者
+        if tr_title+"_"+tr_author in files_m:
+            log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
+            if_down = False
+
+        # 不同网站重复去重-根据标题
+        if tr_title in other_list:
+            log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
             if_down = False
 
         # for f in file_dir_files:
@@ -251,11 +274,11 @@ def get_list(key, page_num, param_dict):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
             download_url = 'http://kns.cnki.net/kns' + tr_down_url[2:] + '&dflag=pdfdown'
             log.info('\t下载链接 ... {}'.format(download_url))
-            download(tr_title, download_url)
+            download(tr_title, tr_author, download_url)
             time.sleep(6)
 
 
-def download(title, down_url):
+def download(title, author, down_url):
     # print(down_url)
     down_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate',
@@ -314,7 +337,7 @@ def download(title, down_url):
                     exit()
 
                 # 保存文件
-                save_file(title, r)
+                save_file(title, author, r)
             else:
                 log.error('\t文章支付无效 ...{}'.format(r_pay.headers))
                 log.error('\t文章链接 ...{}'.format('http://kns.cnki.net/kns' + down_url[2:]))
@@ -338,7 +361,7 @@ def download(title, down_url):
                 exit()
 
             # 保存文件
-            save_file(title, r)
+            save_file(title, author, r)
     else:
         log.error('\t下载文章连接无效，{}'.format(loc_pubdownload))
 
@@ -353,7 +376,7 @@ def get_host(url):
         return None
 
 
-def save_file(title, response):
+def save_file(title, author, response):
     if response.headers.get('Content-Disposition'):
         # 检测编码, 获取header中文文件名
         file_name_str = str(bytes(response.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GBK")
@@ -364,14 +387,14 @@ def save_file(title, response):
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             with open(file_m, "a") as fm:
-                fm.write(title + "," + file2write + "\n")
+                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
         else:
             # 下载内容
             with open(file2write, "wb") as code:
                 code.write(response.content)
                 log.info('\t文件下载完成 ... {}'.format(file2write))
             with open(file_m, "a") as fm:
-                fm.write(title + "," + file2write + "\n")
+                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
 
     else:
         log.error('\t文件无法下载 ... {}'.format(response.headers))

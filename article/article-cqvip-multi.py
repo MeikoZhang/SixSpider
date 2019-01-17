@@ -65,17 +65,33 @@ data = {
 # md5转化密码
 m2 = hashlib.md5()
 m2.update(data['Password'].encode('utf-8'))
-data['Password']=m2.hexdigest()
+data['Password'] = m2.hexdigest()
 
 # 下载文件存储目录
-file_dir = os.path.join(base_path, "维普网")
-file_dir_files = os.listdir(file_dir)
-# 已下载文件列表
+# file_dir = os.path.join(base_path, "维普网")
+cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+file_dir = os.path.join(base_path, "维普网", cur_day)
+if os.path.exists(base_path):
+    print("目录{}不存在，创建该目录...".format(file_dir))
+    os.mkdir(file_dir)
+else:
+    print("目录{}已存在，下载文件中...".format(file_dir))
+
+# 已下载文件列表-目录形式：标题/标题_首作者/文件目录
 file_m = os.path.join(base_path, "维普网目录.txt")
+# 本网站目录列表 - 标题_首作者 数组
 files_m = []
 for f_file in open(file_m, "r"):
     # print(i.strip())
-    files_m.append(f_file.split(",")[0])
+    files_m.append(f_file.split(",")[1])
+
+# 其他目录列表 - 标题 数组
+other_list = []
+files = os.listdir(base_path)
+for file in files:
+    if file.find("目录") > 0 and file != "维普网目录.txt":
+        for f_file in open(os.path.join(base_path, file), "r"):
+            other_list.append(f_file.split(",")[0])
 
 # 请求的全局session
 session = requests.Session()
@@ -189,12 +205,17 @@ def get_list(key=None, page="1"):
             i = i+1
             # 获取文章名称title
             title = alink.select('dt a[target=_blank]')[0].get_text()
+            author = alink.select.select('dd .author a')[0].get_text()
             article_a = alink.select('.article-source a')
-            log.info("{},{},{},".format(i, title, len(article_a)))
+            log.info("{},{},{},{}".format(i, title, author, article_a))
 
-            # 文件重复去重
-            if title in files_m:
-                log.info('\t文件已存在目录列表 ... {}'.format(os.path.join(file_dir, title)))
+            # 相同网站文件重复去重-标题名加作者
+            if title+"_"+author in files_m:
+                log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, title)))
+                continue
+            # 不同网站重复去重-根据标题
+            if title in other_list:
+                log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, title)))
                 continue
 
             # 文件不存在，开始下载
@@ -246,12 +267,12 @@ def get_list(key=None, page="1"):
                 download_url = r3.json()['url']
                 if download_url:
                     log.info('\t下载文章链接 {}'.format(download_url))
-                    download(title, download_url)
+                    download(title, author, download_url)
             else:
                 log.info('\t文件下载链接获取失败 ... {}'.format(article_a))
 
 
-def download(title, download_url):
+def download(title, author, download_url):
     file_name = download_url.split('FileName=')[1]
     if file_name:
         file2write = os.path.join(file_dir, file_name)
@@ -259,7 +280,7 @@ def download(title, download_url):
             log.info('\t文件已存在 ... {}'.format(file2write))
             # 更新目录
             with open(file_m, "a") as fm:
-                fm.write(title + "," + file2write + "\n")
+                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
         else:
             f = session.get(download_url)
             # 检测编码, 获取header中文文件名
@@ -271,7 +292,7 @@ def download(title, download_url):
                 # 更新目录
             log.info('\t文件下载完成 ... {}'.format(file2write))
             with open(file_m, "a") as fm:
-                fm.write(title + "," + file2write + "\n")
+                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
 
 
 # get_list('U=依托考昔 OR U=安康信')
