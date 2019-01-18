@@ -80,15 +80,15 @@ files_m = []
 for f_file in open(file_m, "r", encoding='utf-8'):
     if len(f_file.split(",")) < 2:
         continue
-    print(f_file.strip())
+    # print(f_file.strip())
     files_m.append(f_file.split(",")[1])
-    print(">>")
+    # print(">>")
 
 # 其他目录列表 - 标题 数组
 other_list = []
 files = os.listdir(base_path)
 for file in files:
-    if file.find("目录") > 0 and file != "中国知网目录1.txt":
+    if file.find("目录") > 0 and file != "中国知网目录.txt":
         for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
             if len(f_file.split(",")) < 2:
                 continue
