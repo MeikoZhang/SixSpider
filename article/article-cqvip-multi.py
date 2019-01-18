@@ -70,19 +70,23 @@ data['Password'] = m2.hexdigest()
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "维普网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+if cur_day > '2019-02-01':
+    exit()
+
 file_dir = os.path.join(base_path, "维普网", cur_day)
-if os.path.exists(base_path):
+if os.path.exists(file_dir):
+    print("目录{}已存在，下载文件中...".format(file_dir))
+else:
     print("目录{}不存在，创建该目录...".format(file_dir))
     os.mkdir(file_dir)
-else:
-    print("目录{}已存在，下载文件中...".format(file_dir))
 
 # 已下载文件列表-目录形式：标题/标题_首作者/文件目录
 file_m = os.path.join(base_path, "维普网目录.txt")
 # 本网站目录列表 - 标题_首作者 数组
 files_m = []
-for f_file in open(file_m, "r"):
-    # print(i.strip())
+for f_file in open(file_m, "r", encoding='utf-8'):
+    if len(f_file.split(",")) < 2:
+        continue
     files_m.append(f_file.split(",")[1])
 
 # 其他目录列表 - 标题 数组
@@ -90,7 +94,9 @@ other_list = []
 files = os.listdir(base_path)
 for file in files:
     if file.find("目录") > 0 and file != "维普网目录.txt":
-        for f_file in open(os.path.join(base_path, file), "r"):
+        for f_file in open(os.path.join(base_path, file), "r" , encoding='utf-8'):
+            if len(f_file.split(",")) < 2:
+                continue
             other_list.append(f_file.split(",")[0])
 
 # 请求的全局session
@@ -205,7 +211,7 @@ def get_list(key=None, page="1"):
             i = i+1
             # 获取文章名称title
             title = alink.select('dt a[target=_blank]')[0].get_text()
-            author = alink.select.select('dd .author a')[0].get_text()
+            author = alink.select('dd .author a')[0].get_text()
             article_a = alink.select('.article-source a')
             log.info("{},{},{},{}".format(i, title, author, article_a))
 
@@ -279,7 +285,7 @@ def download(title, author, download_url):
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             # 更新目录
-            with open(file_m, "a") as fm:
+            with open(file_m, "a", encoding='utf-8') as fm:
                 fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
         else:
             f = session.get(download_url)
@@ -291,7 +297,7 @@ def download(title, author, download_url):
                 code.write(f.content)
                 # 更新目录
             log.info('\t文件下载完成 ... {}'.format(file2write))
-            with open(file_m, "a") as fm:
+            with open(file_m, "a", encoding='utf-8') as fm:
                 fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
 
 

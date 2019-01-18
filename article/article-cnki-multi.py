@@ -16,6 +16,9 @@ import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
+base_path = r"E:\文档"
+
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
 
@@ -26,7 +29,7 @@ log_console_handler.setLevel(logging.INFO)
 log_console_handler.setFormatter(formatter)
 
 # 文件log配置
-log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article\cnki_run.log"), when="D", interval=1, backupCount=7)
+log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article\cnki_run.log"), when="D", interval=1, backupCount=7, encoding='utf-8')
 log_file_handler.setLevel(logging.INFO)
 log_file_handler.setFormatter(formatter)
 log_file_handler.suffix = "%Y-%m-%d_%H-%M.log"
@@ -57,33 +60,38 @@ data = {
     'pwd': '33530912'
 }
 
-# base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
-base_path = r"E:\文档"
-
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "中国知网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+if cur_day > '2019-02-01':
+    exit()
+
 file_dir = os.path.join(base_path, "中国知网", cur_day)
-if os.path.exists(base_path):
+if os.path.exists(file_dir):
+    print("目录{}已存在，下载文件中...".format(file_dir))
+else:
     print("目录{}不存在，创建该目录...".format(file_dir))
     os.mkdir(file_dir)
-else:
-    print("目录{}已存在，下载文件中...".format(file_dir))
 
 file_dir_files = os.listdir(file_dir)
 # 已下载文件列表
 file_m = os.path.join(base_path, "中国知网目录.txt")
 files_m = []
-for f_file in open(file_m, "r"):
-    # print(i.strip())
+for f_file in open(file_m, "r", encoding='utf-8'):
+    if len(f_file.split(",")) < 2:
+        continue
+    print(f_file.strip())
     files_m.append(f_file.split(",")[1])
+    print(">>")
 
 # 其他目录列表 - 标题 数组
 other_list = []
 files = os.listdir(base_path)
 for file in files:
-    if file.find("目录") > 0 and file != "中国知网目录.txt":
-        for f_file in open(os.path.join(base_path, file), "r"):
+    if file.find("目录") > 0 and file != "中国知网目录1.txt":
+        for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
+            if len(f_file.split(",")) < 2:
+                continue
             other_list.append(f_file.split(",")[0])
 
 # 请求的全局session
@@ -223,8 +231,10 @@ def get_list(key, page_num, param_dict):
         authors_a = tds[2].select('a')
         for author_a in authors_a:
             tr_authors = tr_authors + "_" + author_a.text
-        # 首作者
-        tr_author = tds[2].select('a')[0].text
+        # 首作
+        tr_author = ""
+        if len(authors_a) > 0:
+            tr_author = authors_a[0].text
 
         # 发表时间
         tr_time = tds[4].text
@@ -386,14 +396,14 @@ def save_file(title, author, response):
         file2write = os.path.join(file_dir, file_name)
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
-            with open(file_m, "a") as fm:
+            with open(file_m, "a", encoding='utf-8') as fm:
                 fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
         else:
             # 下载内容
             with open(file2write, "wb") as code:
                 code.write(response.content)
                 log.info('\t文件下载完成 ... {}'.format(file2write))
-            with open(file_m, "a") as fm:
+            with open(file_m, "a", encoding='utf-8') as fm:
                 fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
 
     else:

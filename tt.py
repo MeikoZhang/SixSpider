@@ -4,6 +4,7 @@ import itertools
 import os
 import requests
 import time
+import re
 
 # headers = {
 #     'Accept': '*/*'
@@ -21,14 +22,8 @@ import time
 # r.encoding='utf-8'
 # print(r.text)
 
-base_path = r"D:\文档"
-for line in open(os.path.join(base_path, "中国知网目录.txt"), "r"):
-    split = line.split(",")
-    f_name = split[1].split("\\")
-    author = ""
-    print(f_name[3].replace("_省略_", "").split("_"))
-    # with open(os.path.join(base_path, "中国知网目录_tmp.txt"), 'a') as fw:
-    #     fw.write("")
+base_path = r"C:\Users\Administrator\Desktop"
 
-
-
+for f_file in open(file_m, "r", encoding='utf-8'):
+    # print(i.strip())
+    files_m.append(f_file.split(",")[1])
