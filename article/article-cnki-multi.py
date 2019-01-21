@@ -77,22 +77,9 @@ file_dir_files = os.listdir(file_dir)
 # 已下载文件列表
 file_m = os.path.join(base_path, "中国知网目录.txt")
 files_m = []
-for f_file in open(file_m, "r", encoding='utf-8'):
-    if len(f_file.split(",")) < 2:
-        continue
-    # print(f_file.strip())
-    files_m.append(f_file.split(",")[1])
-    # print(">>")
 
 # 其他目录列表 - 标题 数组
 other_list = []
-files = os.listdir(base_path)
-for file in files:
-    if file.find("目录") > 0 and file != "中国知网目录.txt":
-        for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
-            if len(f_file.split(",")) < 2:
-                continue
-            other_list.append(f_file.split(",")[0])
 
 # 请求的全局session
 session = requests.Session()
@@ -105,6 +92,27 @@ session.get('http://www.cnki.net/', headers=headers)
 session.get('http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
             headers=headers)
 session.get('http://kns.cnki.net/kns/brief/result.aspx', headers=headers)
+
+
+def load_list():
+    # 加载自己目录
+    files_m.clear()
+    for f_file in open(file_m, "r", encoding='utf-8'):
+        if len(f_file.split(",")) < 2:
+            continue
+        # print(f_file.strip())
+        files_m.append(f_file.split(",")[1])
+        # print(">>")
+
+    # 加载其他目录
+    other_list.clear()
+    files = os.listdir(base_path)
+    for file in files:
+        if file.find("目录") > 0 and file != "中国知网目录.txt":
+            for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
+                if len(f_file.split(",")) < 2:
+                    continue
+                other_list.append(f_file.split(",")[0])
 
 
 def login():
@@ -149,6 +157,7 @@ def login():
 
 
 def get_total(key):
+    load_list()
     headers[
         'Referer'] = 'Referer: http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
 
@@ -279,7 +288,6 @@ def get_list(key, page_num, param_dict):
         #         with open(file_m, "a") as fm:
         #             fm.write(tr_title + "," + os.path.join(file_dir, f) + "\n")
         #         continue
-
         if if_down:
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
             download_url = 'http://kns.cnki.net/kns' + tr_down_url[2:] + '&dflag=pdfdown'

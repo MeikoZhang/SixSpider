@@ -117,5 +117,4 @@ def ttapi(url):  ####APP模式
 
 if __name__ == '__main__':
     url = 'https://www.toutiao.com/ch/news_tech/'
-    ttapi(url)
-
+    # ttapi(url)

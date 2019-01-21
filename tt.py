@@ -5,6 +5,7 @@ import os
 import requests
 import time
 import re
+import pymysql
 
 # headers = {
 #     'Accept': '*/*'
@@ -22,13 +23,24 @@ import re
 # r.encoding='utf-8'
 # print(r.text)
 
-base_path = r"D:\文档"
-other_list = []
-files = os.listdir(base_path)
-for file in files:
-    if file.find("目录") > 0 and file != "中国知网目录.txt":
-        for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
-            if len(f_file.split(",")) < 2:
-                continue
-            other_list.append(f_file.split(",")[0])
-print(other_list)
+batch_sql = []
+batch_sql.append(('v02004740000bfsbv2ikr6g9m0dl32g0'))
+batch_sql.append(['2'])
+batch_sql.append(['3'])
+batch_sql.append(['4'])
+batch_sql.append(['5'])
+
+
+
+db = pymysql.connect(host='47.101.146.57', port=2018, user='root', password='Liuku!!!111', db='dm_report', charset='utf8')
+cur = db.cursor()
+r = cur.execute("select video_id from toutiao_video where video_id = %s", "v02004740000bfsbv2ikr6g9m0dl32g0")
+# r = cur.executemany("select video_id from toutiao_video where video_id = %s", batch_sql)
+# print(cur.fetchall())
+print(r)
+if r == 1:
+    result = cur.fetchall()
+    print("videoId", result[0][0])
+    # for row in result:
+    #         print(row)
+    #         print(row[0])

@@ -1,3 +1,9 @@
+#视频评论获取地址 ibc=newswap标识评论排序
+https://comment.api.163.com/api/v1/products/a2869674571f77b5a0867c3d71db5856
+/threads/' + commentID + '/comments/newList?
+offset=0&limit=5&ibc=newswap&showLevelThreshold=5&
+
+
 #pyspider的使用    
 https://blog.csdn.net/weixin_37947156/article/details/76495144
 

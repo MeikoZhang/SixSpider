@@ -84,25 +84,35 @@ else:
 file_m = os.path.join(base_path, "维普网目录.txt")
 # 本网站目录列表 - 标题_首作者 数组
 files_m = []
-for f_file in open(file_m, "r", encoding='utf-8'):
-    if len(f_file.split(",")) < 2:
-        continue
-    files_m.append(f_file.split(",")[1])
+
 
 # 其他目录列表 - 标题 数组
 other_list = []
-files = os.listdir(base_path)
-for file in files:
-    if file.find("目录") > 0 and file != "维普网目录.txt":
-        for f_file in open(os.path.join(base_path, file), "r" , encoding='utf-8'):
-            if len(f_file.split(",")) < 2:
-                continue
-            other_list.append(f_file.split(",")[0])
+
 
 # 请求的全局session
 session = requests.Session()
 cookie_path = os.path.join(base_path, r"article\article-cqvip-cookie.txt")
 # print(cookie_path)
+
+
+def load_list():
+    # 加载自己目录
+    files_m.clear()
+    for f_file in open(file_m, "r", encoding='utf-8'):
+        if len(f_file.split(",")) < 2:
+            continue
+        files_m.append(f_file.split(",")[1])
+
+    # 加载其他目录
+    other_list.clear()
+    files = os.listdir(base_path)
+    for file in files:
+        if file.find("目录") > 0 and file != "维普网目录.txt":
+            for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
+                if len(f_file.split(",")) < 2:
+                    continue
+                other_list.append(f_file.split(",")[0])
 
 
 def login():
@@ -160,6 +170,7 @@ def get_total(key=None):
         log.info('没有设置关键词！！！')
         return
 
+    load_list()
     # 获取搜索列表
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
