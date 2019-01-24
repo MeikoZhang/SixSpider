@@ -23,24 +23,3 @@ import pymysql
 # r.encoding='utf-8'
 # print(r.text)
 
-batch_sql = []
-batch_sql.append(('v02004740000bfsbv2ikr6g9m0dl32g0'))
-batch_sql.append(['2'])
-batch_sql.append(['3'])
-batch_sql.append(['4'])
-batch_sql.append(['5'])
-
-
-
-db = pymysql.connect(host='47.101.146.57', port=2018, user='root', password='Liuku!!!111', db='dm_report', charset='utf8')
-cur = db.cursor()
-r = cur.execute("select video_id from toutiao_video where video_id = %s", "v02004740000bfsbv2ikr6g9m0dl32g0")
-# r = cur.executemany("select video_id from toutiao_video where video_id = %s", batch_sql)
-# print(cur.fetchall())
-print(r)
-if r == 1:
-    result = cur.fetchall()
-    print("videoId", result[0][0])
-    # for row in result:
-    #         print(row)
-    #         print(row[0])
