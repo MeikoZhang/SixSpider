@@ -270,6 +270,14 @@ def get_list(key, page_num, param_dict):
         file_will_write = os.path.join(file_dir, tr_title)
 
         if_down = True
+        # 去掉包含关键字的题目
+        key_ignore = ["总目次", "索引", "总目录"]
+        for key_i in key_ignore:
+            if key_i in tr_title:
+                log.info('\t当前文章标题包含关键字 {} ，已忽略下载'.format(key_i))
+                if_down = False
+                break
+
         # 相同网站文件重复去重-标题名加作者
         if tr_title+"_"+tr_author in files_m:
             log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))

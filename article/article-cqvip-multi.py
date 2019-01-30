@@ -226,6 +226,18 @@ def get_list(key=None, page="1"):
             article_a = alink.select('.article-source a')
             log.info("{},{},{},{}".format(i, title, author, article_a))
 
+            # 去掉包含关键字的题目
+            if_down = True
+            key_ignore = ["总目次", "索引", "总目录"]
+            for key_i in key_ignore:
+                if key_i in title:
+                    log.info('\t当前文章标题包含关键字 {} ，已忽略下载'.format(key_i))
+                    if_down = False
+                    break
+
+            if not if_down:
+                continue
+
             # 相同网站文件重复去重-标题名加作者
             if title+"_"+author in files_m:
                 log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, title)))
