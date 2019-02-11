@@ -70,7 +70,8 @@ data['Password'] = m2.hexdigest()
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "维普网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-if cur_day > '2019-02-01':
+if cur_day > '2019-03-01':
+    log.info("授权已过期")
     exit()
 
 file_dir = os.path.join(base_path, "维普网", cur_day)
@@ -117,8 +118,6 @@ def load_list():
 
 def login():
     session.cookies = HC.MozillaCookieJar(filename=cookie_path)
-    if int(time.time()) > 1548950400:
-        exit(0)
     # session.cookies.save()
     #  如果存在cookies文件，则加载，如果不存在则提示
     try:

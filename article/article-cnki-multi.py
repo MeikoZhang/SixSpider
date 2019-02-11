@@ -63,7 +63,8 @@ data = {
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "中国知网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-if cur_day > '2019-02-01':
+if cur_day > '2019-03-01':
+    log.info("授权已过期")
     exit()
 
 file_dir = os.path.join(base_path, "中国知网", cur_day)
@@ -122,8 +123,6 @@ def login():
         headers=headers)
     # cookie新增SID_klogin
     session.get('http://kns.cnki.net/KLogin/Request/GetKFooter.ashx', headers=headers)
-    if int(time.time()) > 1548950400:
-        exit(0)
     r = session.get('http://login.cnki.net/TopLogin/api/loginapi/Login?isAutoLogin=false&'
                     + urllib.parse.urlencode(data) + '&_=' + str(int(time.time() * 1000)))
     user_info = json.loads(r.text[1: -1])
