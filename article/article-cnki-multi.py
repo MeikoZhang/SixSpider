@@ -99,10 +99,10 @@ def load_list():
     # 加载自己目录
     files_m.clear()
     for f_file in open(file_m, "r", encoding='utf-8'):
-        if len(f_file.split(",")) < 2:
+        if len(f_file.split("|*|")) < 2:
             continue
         # print(f_file.strip())
-        files_m.append(f_file.split(",")[1])
+        files_m.append(f_file.split("|*|")[1])
         # print(">>")
 
     # 加载其他目录
@@ -111,9 +111,9 @@ def load_list():
     for file in files:
         if file.find("目录") > 0 and file != "中国知网目录.txt":
             for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
-                if len(f_file.split(",")) < 2:
+                if len(f_file.split("|*|")) < 2:
                     continue
-                other_list.append(f_file.split(",")[0])
+                other_list.append(f_file.split("|*|")[0])
 
 
 def login():
@@ -412,14 +412,14 @@ def save_file(title, author, response):
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
+                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
         else:
             # 下载内容
             with open(file2write, "wb") as code:
                 code.write(response.content)
                 log.info('\t文件下载完成 ... {}'.format(file2write))
             with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
+                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
 
     else:
         log.error('\t文件无法下载 ... {}'.format(response.headers))

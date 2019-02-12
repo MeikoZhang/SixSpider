@@ -101,9 +101,9 @@ def load_list():
     # 加载自己目录
     files_m.clear()
     for f_file in open(file_m, "r", encoding='utf-8'):
-        if len(f_file.split(",")) < 2:
+        if len(f_file.split("|*|")) < 2:
             continue
-        files_m.append(f_file.split(",")[1])
+        files_m.append(f_file.split("|*|")[1])
 
     # 加载其他目录
     other_list.clear()
@@ -111,9 +111,9 @@ def load_list():
     for file in files:
         if file.find("目录") > 0 and file != "维普网目录.txt":
             for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
-                if len(f_file.split(",")) < 2:
+                if len(f_file.split("|*|")) < 2:
                     continue
-                other_list.append(f_file.split(",")[0])
+                other_list.append(f_file.split("|*|")[0])
 
 
 def login():
@@ -308,7 +308,7 @@ def download(title, author, download_url):
             log.info('\t文件已存在 ... {}'.format(file2write))
             # 更新目录
             with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
+                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
         else:
             f = session.get(download_url)
             # 检测编码, 获取header中文文件名
@@ -320,7 +320,7 @@ def download(title, author, download_url):
                 # 更新目录
             log.info('\t文件下载完成 ... {}'.format(file2write))
             with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{},{},{}\n".format(title, title+"_"+author, file2write))
+                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
 
 
 # get_list('U=依托考昔 OR U=安康信')

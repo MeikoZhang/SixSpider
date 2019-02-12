@@ -23,3 +23,10 @@ import pymysql
 # r.encoding='utf-8'
 # print(r.text)
 
+
+for f_file in open("/Users/krison/PycharmProjects/SixSpider/article/中国知网目录.txt", "r", encoding='utf-8'):
+    if len(f_file.split("|*|")) < 2:
+        print("小于2，{}".format(f_file))
+        continue
+    if len(f_file.split("|*|")) > 3:
+        print("大于3，{}".format(f_file))
