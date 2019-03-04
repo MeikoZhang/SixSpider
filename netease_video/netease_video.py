@@ -99,7 +99,7 @@ class Handler(BaseHandler):
                 video.get('videosource', ''), video.get('title', ''), video.get('mp4_url', ''),
                 video.get('keywords', ''), video.get('tag', ''), video.get('length', ''), video.get('mp4_url', ''),
                 video.get('article_type', ''), video.get('large_mode', ''), video.get('cover', ''),
-                video.get('putime', ''), video.get('playCount', ''), video.get('replyCount', ''),
+                video.get('ptime', ''), video.get('playCount', ''), video.get('replyCount', ''),
                 video.get('replyid', ''), time.strftime("%Y-%m-%d %H:%M:%S"))
             batch_sql.append(sql)
         # 插入mysql
