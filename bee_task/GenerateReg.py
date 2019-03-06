@@ -45,7 +45,7 @@ class GenerateReg(object):
 
     def get_user(self, num=0):
         b_cursor = self.business_db.cursor()
-        b_cursor.execute("select max(customer_id) from customer_info where register_channel = 'sys_reg'")
+        b_cursor.execute("select max(open_id) from customer_info where register_channel = 'sys_reg'")
         b_total = b_cursor.fetchone()[0]
         if b_total:
             b_total = str(b_total)
@@ -53,14 +53,14 @@ class GenerateReg(object):
             b_total = "0"
 
         cursor = self.db.cursor()
-        get_user_sql = "select a.PHONE from dm_report.ind_info a " \
+        get_user_sql = "select a.CUSTOMERID,a.PHONE from dm_report.ind_info a " \
                        "where CUSTOMERID > '" + b_total + "'" \
                        "and PHONE is not null and PHONE <> '00000000000' and length(PHONE) > 10 limit " + str(num)
         cursor.execute(get_user_sql)
         rows = cursor.fetchall()
         users = []
         for row in rows:
-            users.append(row[0])
+            users.append([row[0], row[1]])
         self.log.info("要生成注册的用户手机号:{}".format(users))
         return users
 
@@ -72,6 +72,7 @@ class GenerateReg(object):
                     `sex`,
                     `cert_id`,
                     `mobile`,
+                    `open_id`,
                     `status`,
                     `create_user`,
                     `update_user`,
@@ -85,6 +86,7 @@ class GenerateReg(object):
                         NULL,
                         NULL,
                         NULL,
+                        '{}',
                         '{}',
                         '1',
                         'sys',
@@ -101,7 +103,7 @@ class GenerateReg(object):
             before_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + random.randint(-300, 0)))
             try:
                 # 执行sql语句
-                reg_cursor.execute(reg_sql.format(user_id, u, before_time, before_time))
+                reg_cursor.execute(reg_sql.format(user_id, u[1], u[0], before_time, before_time))
                 # 提交到数据库执行
                 self.business_db.commit()
             except Exception as e:
