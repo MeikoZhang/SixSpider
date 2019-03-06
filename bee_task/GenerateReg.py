@@ -45,7 +45,7 @@ class GenerateReg(object):
 
     def get_user(self, num=0):
         b_cursor = self.business_db.cursor()
-        b_cursor.execute("select max(open_id) from customer_info where register_channel = 'sys_reg'")
+        b_cursor.execute("select max(open_id) from customer_info where register_channel = 'hot_reg'")
         b_total = b_cursor.fetchone()[0]
         if b_total:
             b_total = str(b_total)
@@ -55,7 +55,7 @@ class GenerateReg(object):
         cursor = self.db.cursor()
         get_user_sql = "select a.CUSTOMERID,a.PHONE from dm_report.ind_info a " \
                        "where CUSTOMERID > '" + b_total + "'" \
-                       "and PHONE is not null and PHONE <> '00000000000' and length(PHONE) > 10 limit " + str(num)
+                       "and PHONE is not null and PHONE <> '00000000000' and length(PHONE) > 10 order by CUSTOMERID limit " + str(num)
         cursor.execute(get_user_sql)
         rows = cursor.fetchall()
         users = []
