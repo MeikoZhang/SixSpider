@@ -82,7 +82,7 @@ class GenerateReg(object):
                 VALUES
                     (
                         '{}',
-                        'sys_reg',
+                        'hot_reg',
                         NULL,
                         NULL,
                         NULL,
@@ -142,7 +142,7 @@ class GenerateReg(object):
                 VALUES
                     (
                         '{}',
-                        'sys_login',
+                        'hot_login',
                         '{}',
                         now(),
                         now()
