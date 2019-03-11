@@ -172,12 +172,23 @@ class GenerateReg(object):
 if __name__ == '__main__':
     # 初始化 db，log
     gr = GenerateReg()
-    # 随机选取3-7条记录
-    user2reg = gr.get_user(5 + random.randint(-2, 2))
-    # 选取用户生成注册
-    gr.reg_user(user2reg)
-    # 选取用户生成登陆
-    gr.user_login()
+    # 随机选取记录
+    now_hour = int(time.strftime('%H'))
+    if 22 >= now_hour >= 9:
+        user_num = random.randint(-20, 20)
+    else:
+        user_num = random.randint(-2, 2)
+    # 查询注册用户
+    if user_num > 0:
+        gr.log.info("随机用户数为{}".format(user_num))
+        # 随机用户数正数才运行
+        user2reg = gr.get_user(user_num)
+        # 选取用户生成注册
+        gr.reg_user(user2reg)
+        # 选取用户生成登陆
+        gr.user_login()
+    else:
+        gr.log.info("随机用户数为负数{},无法产生注册记录".format(user_num))
     # # 关闭 db
     gr.closes()
 
