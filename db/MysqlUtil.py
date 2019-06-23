@@ -14,17 +14,33 @@ class MysqlUtil(object):
         self.db = db
         self.cursor = db.cursor()
 
+    def executeQuery(self, query_sql):
+        if isinstance(query_sql, str):
+            try:
+                # 执行sql语句
+                self.cursor.execute(query_sql)
+                result = self.cursor.fetchall()
+                self.db.commit()
+                return result
+                # 提交到数据库执行
+            except Exception as e:
+                # Rollback in case there is any error
+                print('Query Exception: ', e)
+        else:
+            print('error ,plesase input string')
+            return None
+
     def execute(self, execute_sql):
         if isinstance(execute_sql, str):
             try:
                 # 执行sql语句
                 self.cursor.execute(execute_sql)
+                self.db.commit()
                 # 提交到数据库执行
             except Exception as e:
                 # Rollback in case there is any error
                 print('Exception: ', e)
                 self.db.rollback()
-            self.db.commit()
         else:
             print('error ,plesase input string')
 
@@ -34,12 +50,13 @@ class MysqlUtil(object):
                 try:
                     # 执行sql语句
                     self.cursor.execute(each)
+                    self.db.commit()
                     # 提交到数据库执行
                 except Exception as e:
                     # Rollback in case there is any error
+                    print(batch_sql)
                     print('Exception: ', e)
                     self.db.rollback()
-            self.db.commit()
         else:
             print('error ,plesase input list')
 
