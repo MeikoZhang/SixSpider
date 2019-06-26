@@ -90,6 +90,8 @@ files_m = []
 # 其他目录列表 - 标题 数组
 other_list = []
 
+# 文件名列表 - 标题 文件名
+download_list = {}
 
 # 请求的全局session
 session = requests.Session()
@@ -104,6 +106,7 @@ def load_list():
         if len(f_file.split("|*|")) < 2:
             continue
         files_m.append(f_file.split("|*|")[1])
+        download_list[f_file.split("|*|")[0]] = f_file.split("|*|")[2]
 
     # 加载其他目录
     other_list.clear()
@@ -304,6 +307,13 @@ def download(title, author, download_url):
     file_name = download_url.split('FileName=')[1]
     if file_name:
         file2write = os.path.join(file_dir, file_name)
+        if title in download_list:
+            download_exist = download_list[title]
+            if file2write in download_exist or download_exist in file2write:
+                log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
+                with open(file_m, "a", encoding='utf-8') as fm:
+                    fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
+                return
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             # 更新目录

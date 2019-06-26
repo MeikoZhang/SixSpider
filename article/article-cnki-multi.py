@@ -15,7 +15,10 @@ import re
 import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import socket
 
+
+socket.setdefaulttimeout(20)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
 base_path = r"E:\文档"
 
@@ -82,6 +85,9 @@ files_m = []
 # 其他目录列表 - 标题 数组
 other_list = []
 
+# 文件名列表 - 标题 文件名
+download_list = {}
+
 # 请求的全局session
 session = requests.Session()
 
@@ -98,11 +104,13 @@ session.get('http://kns.cnki.net/kns/brief/result.aspx', headers=headers)
 def load_list():
     # 加载自己目录
     files_m.clear()
+    download_list.clear()
     for f_file in open(file_m, "r", encoding='utf-8'):
         if len(f_file.split("|*|")) < 2:
             continue
         # print(f_file.strip())
         files_m.append(f_file.split("|*|")[1])
+        download_list[f_file.split("|*|")[0]] = f_file.split("|*|")[2]
         # print(">>")
 
     # 加载其他目录
@@ -340,11 +348,12 @@ def download(title, author, down_url):
                 'pid': 'cjfq',
                 'uid': requests.utils.dict_from_cookiejar(session.cookies).get('LID')
             }
-
+            session.close()
             r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False)
             r_pay.encoding = 'utf-8'
             if r_pay.status_code == 302:
                 log.info('\t文章支付完成 ...{}'.format(r_pay.headers))
+                time.sleep(2)
                 # 返回的是文件流
                 # 循环直到r = 200, 重定向到最后的下载链接，
                 r = r_pay
@@ -355,6 +364,7 @@ def download(title, author, down_url):
                             down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                         else:
                             r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
+                        session.close()
                         r = session.get(r_location, headers=down_headers, allow_redirects=False)
                 except:
                     log.error(traceback.format_exc())
@@ -409,6 +419,13 @@ def save_file(title, author, response):
         # print(file_name)
 
         file2write = os.path.join(file_dir, file_name)
+        if title in download_list:
+            download_exist = download_list[title]
+            if file2write in download_exist or download_exist in file2write:
+                log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
+                with open(file_m, "a", encoding='utf-8') as fm:
+                    fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
+                return
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             with open(file_m, "a", encoding='utf-8') as fm:
@@ -417,13 +434,21 @@ def save_file(title, author, response):
             # 下载内容
             with open(file2write, "wb") as code:
                 code.write(response.content)
-                log.info('\t文件下载完成 ... {}'.format(file2write))
-            with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
 
+            if os.path.getsize(file2write) > 0:
+                log.info('\t文件下载完成 ... {}'.format(file2write))
+                with open(file_m, "a", encoding='utf-8') as fm:
+                    fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
+            else:
+                os.remove(file2write)
+                log.info('\t文件下载不完整,已删除 ... {}'.format(file2write))
     else:
         log.error('\t文件无法下载 ... {}'.format(response.headers))
         log.error(response.text)
+
+    # 下载完成后关闭
+    response.close()
+    time.sleep(2)
 
 
 def print_cookie():
@@ -434,11 +459,17 @@ def print_cookie():
 login()
 log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 get_total(
-    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思")
+    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀")
+
 log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
 time.sleep(2)
 get_total(
-    "FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=重组人干扰素α-2b OR FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
+    "FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=重组人干扰素α-2b")
+
+log.info("》》》》》》》》》休息2秒，继续查询第三组关键词》》》》》》》》》")
+time.sleep(2)
+get_total(
+    "FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
 # download("基于江南原生态理念的水居民宿设计——以原舍·阅水民宿设计为例.pdf",
 #          "http://kns.cnki.net/kns/download.aspx?filename=s9Ge4EVaSNXewMFT3p2Z2RjdSBnW5Q2L5cVS4p2UIZTb6Flcp92dnJGepBTSGZUZthWQWpXYkFVY5x2QzoWWjZ2ZEF3QSNlduRjS6NlZXdkMmhDWFB1Y4kma0MmUGhGd4MUMnFXNnB1an9maxMGMVN3ZIljbqdUT&tablename=CJFDPREP")
 # download("辛伐他汀片体外溶出一致性评价方法的建立_郭志渊_谢华_袁军.pdf",
