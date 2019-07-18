@@ -110,7 +110,7 @@ def load_list():
             continue
         # print(f_file.strip())
         files_m.append(f_file.split("|*|")[1])
-        download_list[f_file.split("|*|")[0]] = f_file.split("|*|")[2]
+        download_list[f_file.split("|*|")[0]] = f_file.split("|*|")[2].split("\\")[-1]
         # print(">>")
 
     # 加载其他目录
@@ -421,7 +421,7 @@ def save_file(title, author, response):
         file2write = os.path.join(file_dir, file_name)
         if title in download_list:
             download_exist = download_list[title]
-            if file2write in download_exist or download_exist in file2write:
+            if file_name in download_exist or download_exist in file_name:
                 log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
                 with open(file_m, "a", encoding='utf-8') as fm:
                     fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
