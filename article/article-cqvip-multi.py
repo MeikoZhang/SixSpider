@@ -309,7 +309,7 @@ def download(title, author, download_url):
         file2write = os.path.join(file_dir, file_name)
         if title in download_list:
             download_exist = download_list[title]
-            if file_name in download_exist or download_exist in file_name:
+            if file_name.replace(".pdf", "") in download_exist.replace(".pdf", "") or download_exist.replace(".pdf", "") in file_name.replace(".pdf", ""):
                 log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
                 with open(file_m, "a", encoding='utf-8') as fm:
                     fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))

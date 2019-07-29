@@ -16,11 +16,12 @@ import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import socket
+import EasySqlite
 
 
 socket.setdefaulttimeout(20)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
-base_path = r"E:\文档"
+base_path = r"D:\文档"
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
@@ -66,7 +67,7 @@ data = {
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "中国知网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
-if cur_day > '2019-03-01':
+if cur_day > '2099-03-01':
     log.info("授权已过期")
     exit()
 
@@ -77,16 +78,9 @@ else:
     print("目录{}不存在，创建该目录...".format(file_dir))
     os.mkdir(file_dir)
 
-file_dir_files = os.listdir(file_dir)
-# 已下载文件列表
-file_m = os.path.join(base_path, "中国知网目录.txt")
-files_m = []
+# 连接目录表Sqlite
+db = EasySqlite.EasySqlite('article.db')
 
-# 其他目录列表 - 标题 数组
-other_list = []
-
-# 文件名列表 - 标题 文件名
-download_list = {}
 
 # 请求的全局session
 session = requests.Session()
@@ -96,38 +90,15 @@ cookie_path = os.path.join(base_path, r"article\article-cnki-cookie.txt")
 session.cookies = HC.MozillaCookieJar(filename=cookie_path)
 
 session.get('http://www.cnki.net/', headers=headers)
-session.get('http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
+session.get('http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
             headers=headers)
 session.get('http://kns.cnki.net/kns/brief/result.aspx', headers=headers)
-
-
-def load_list():
-    # 加载自己目录
-    files_m.clear()
-    download_list.clear()
-    for f_file in open(file_m, "r", encoding='utf-8'):
-        if len(f_file.split("|*|")) < 2:
-            continue
-        # print(f_file.strip())
-        files_m.append(f_file.split("|*|")[1])
-        download_list[f_file.split("|*|")[0]] = f_file.split("|*|")[2].split("\\")[-1]
-        # print(">>")
-
-    # 加载其他目录
-    other_list.clear()
-    files = os.listdir(base_path)
-    for file in files:
-        if file.find("目录") > 0 and file != "中国知网目录.txt":
-            for f_file in open(os.path.join(base_path, file), "r", encoding='utf-8'):
-                if len(f_file.split("|*|")) < 2:
-                    continue
-                other_list.append(f_file.split("|*|")[0])
 
 
 def login():
     # 多步登陆获取完整cookie
     session.get(
-        'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
+        'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
         headers=headers)
     # cookie新增SID_klogin
     session.get('http://kns.cnki.net/KLogin/Request/GetKFooter.ashx', headers=headers)
@@ -139,7 +110,7 @@ def login():
         login_header = {
             'Host': 'login.cnki.net',
             'Pragma': 'no-cache',
-            'Referer': 'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
+            'Referer': 'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
         }
         session.post('http://kns.cnki.net/kns/Loginid.aspx', data={'uid': user_info.get('Uid')},
                      headers={**headers, **login_header})
@@ -164,23 +135,27 @@ def login():
 
 
 def get_total(key):
-    load_list()
     headers[
-        'Referer'] = 'Referer: http://kns.cnki.net/kns/brief/result.aspx?dbprefix=SCDB&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
+        'Referer'] = 'Referer: http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
 
     s_handle_data = {
         'action': ''
-        , 'NaviCode': '*'
+        , 'NaviCode': 'E'
         , 'ua': '1.21'
         , 'isinEn': '1'
         , 'PageName': 'ASP.brief_result_aspx'
-        , 'DbPrefix': 'SCDB'
-        , 'DbCatalog': '中国学术文献网络出版总库'
-        , 'ConfigFile': 'SCDB.xml'
-        , 'db_opt': 'CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
+        , 'DbPrefix': 'CJFQ'
+        , 'DbCatalog': '中国学术期刊网络出版总库'
+        , 'ConfigFile': 'CJFQ.xml'
+        , 'db_opt': 'CJFQ'
         , 'expertvalue': key
-        , 'publishdate_from': '2018-12-24'
         , 'his': '0'
+        , 'year_from': '2018'
+        , 'year_to': '2019'
+        , 'year_type': 'echar'
+        , 'his': '0'
+        , 'db_cjfqview': '中国学术期刊网络出版总库,WWJD'
+        , 'db_cflqview': '中国学术期刊网络出版总库'
         , '__': 'Thu Jan 10 2019 15:05:25 GMT+0800 (中国标准时间)'
     }
     # 设置查询条件，请求一次
@@ -252,17 +227,20 @@ def get_list(key, page_num, param_dict):
         if len(authors_a) > 0:
             tr_author = authors_a[0].text
 
+        # 刊名
+        from_source = tds[3].select('a')[0].text
+
         # 发表时间
         tr_time = tds[4].text
 
-        # 数据库
+        # 被引
         tr_db = tds[5].text
 
-        # 下载链接 http://kns.cnki.net/kns/download.aspx
-        tr_down_url = tds[7].select('a')[0].attrs['href']
+        # 下载 http://kns.cnki.net/kns/download.aspx
+        tr_down_url = tds[6].select('a')[0].attrs['href']
 
-        # 文件类型
-        type = tds[8].select('a')[0].attrs['title']
+        # 阅读
+        type = tds[7].select('a')[0].attrs['title']
         if type == "HTML阅读":
             tr_file_type = ".pdf"
         elif type == "阅读":
@@ -286,12 +264,18 @@ def get_list(key, page_num, param_dict):
                 break
 
         # 相同网站文件重复去重-标题名加作者
-        if tr_title+"_"+tr_author in files_m:
+        rows = db.execute(
+            "select * from article_down where source='中国知网' and type ='qikan' and title='{}' and head_author='{}'".format(
+                tr_title, tr_author))
+        if len(rows) > 0:
             log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
             if_down = False
 
         # 不同网站重复去重-根据标题
-        if tr_title in other_list:
+        rows_2 = db.execute(
+            "select * from article_down where source='维普网' and type ='qikan' and title='{}'".format(
+                tr_title))
+        if len(rows_2) > 0:
             log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
             if_down = False
 
@@ -419,17 +403,17 @@ def save_file(title, author, response):
         # print(file_name)
 
         file2write = os.path.join(file_dir, file_name)
-        if title in download_list:
-            download_exist = download_list[title]
-            if file_name.replace(".pdf", "") in download_exist.replace(".pdf", "") or download_exist.replace(".pdf", "") in file_name.replace(".pdf", ""):
-                log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
-                with open(file_m, "a", encoding='utf-8') as fm:
-                    fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
-                return
+        rows = db.execute("select * from article_down where source='中国知网' and type ='qikan' and title='{}'".format(title), )
+        if len(rows) > 0:
+            for row in rows:
+                download_exist = row.get("file_name")
+                if file_name.replace(".pdf", "") in download_exist or download_exist in file_name.replace(".pdf", ""):
+                    log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
+                    insert_db(title, author, file_name.replace(".pdf", ""), file2write)
+                    return
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
-            with open(file_m, "a", encoding='utf-8') as fm:
-                fm.write("{}|*|{}|*|{}\n".format(title, title+"_"+author, file2write))
+            insert_db(title, author, file_name.replace(".pdf", ""), file2write)
         else:
             # 下载内容
             with open(file2write, "wb") as code:
@@ -437,8 +421,7 @@ def save_file(title, author, response):
 
             if os.path.getsize(file2write) > 0:
                 log.info('\t文件下载完成 ... {}'.format(file2write))
-                with open(file_m, "a", encoding='utf-8') as fm:
-                    fm.write("{}|*|{}|*|{}\n".format(title, title + "_" + author, file2write))
+                insert_db(title, author, file_name.replace(".pdf", ""), file2write)
             else:
                 os.remove(file2write)
                 log.info('\t文件下载不完整,已删除 ... {}'.format(file2write))
@@ -451,6 +434,11 @@ def save_file(title, author, response):
     time.sleep(2)
 
 
+def insert_db(title, head_author, file_name, path):
+    db.execute("insert into article_down(source,type,title,head_author,file_name,path) "
+               "values ('中国知网','cnki','{}','{}','{}','{}')".format(title, head_author, file_name, path))
+
+
 def print_cookie():
     for cookie in session.cookies:
         log.info(cookie.name, cookie.value)
@@ -459,17 +447,18 @@ def print_cookie():
 login()
 log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 get_total(
-    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀")
+    "FT=聚乙二醇干扰素α-2b OR FT=佩乐能")
 
-log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
-time.sleep(2)
-get_total(
-    "FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=重组人干扰素α-2b")
+# log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
+# time.sleep(2)
+# get_total(
+#     "FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 OR FT=阿瑞吡坦 OR FT=意美 OR FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=重组人干扰素α-2b")
+#
+# log.info("》》》》》》》》》休息2秒，继续查询第三组关键词》》》》》》》》》")
+# time.sleep(2)
+# get_total(
+#     "FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
 
-log.info("》》》》》》》》》休息2秒，继续查询第三组关键词》》》》》》》》》")
-time.sleep(2)
-get_total(
-    "FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
 # download("基于江南原生态理念的水居民宿设计——以原舍·阅水民宿设计为例.pdf",
 #          "http://kns.cnki.net/kns/download.aspx?filename=s9Ge4EVaSNXewMFT3p2Z2RjdSBnW5Q2L5cVS4p2UIZTb6Flcp92dnJGepBTSGZUZthWQWpXYkFVY5x2QzoWWjZ2ZEF3QSNlduRjS6NlZXdkMmhDWFB1Y4kma0MmUGhGd4MUMnFXNnB1an9maxMGMVN3ZIljbqdUT&tablename=CJFDPREP")
 # download("辛伐他汀片体外溶出一致性评价方法的建立_郭志渊_谢华_袁军.pdf",
