@@ -291,7 +291,10 @@ def get_list(key, page_num, param_dict):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
             download_url = 'http://kns.cnki.net/kns' + tr_down_url[2:] + '&dflag=pdfdown'
             log.info('\t下载链接 ... {}'.format(download_url))
-            download(tr_title, tr_author, download_url)
+            # download(tr_title, tr_author, download_url)
+            article_url = 'http://kns.cnki.net/kns' + tds[1].select('a')[0].attrs['href']
+            article_response = session.get(article_url)
+            print(article_response.text)
             time.sleep(6)
 
 
