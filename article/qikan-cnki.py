@@ -18,10 +18,9 @@ from logging.handlers import TimedRotatingFileHandler
 import socket
 import EasySqlite
 
-
 socket.setdefaulttimeout(20)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
-base_path = r"D:\文档"
+base_path = r"/Users/krison/Downloads/文档"
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
@@ -33,7 +32,8 @@ log_console_handler.setLevel(logging.INFO)
 log_console_handler.setFormatter(formatter)
 
 # 文件log配置
-log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article\cnki_run.log"), when="D", interval=1, backupCount=7, encoding='utf-8')
+log_file_handler = TimedRotatingFileHandler(filename=os.path.join(base_path, r"article/cnki_run.log"), when="D",
+                                            interval=1, backupCount=7, encoding='utf-8')
 log_file_handler.setLevel(logging.INFO)
 log_file_handler.setFormatter(formatter)
 log_file_handler.suffix = "%Y-%m-%d_%H-%M.log"
@@ -44,7 +44,6 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 log.addHandler(log_file_handler)
 log.addHandler(log_console_handler)
-
 
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
@@ -81,11 +80,10 @@ else:
 # 连接目录表Sqlite
 db = EasySqlite.EasySqlite('article.db')
 
-
 # 请求的全局session
 session = requests.Session()
 
-cookie_path = os.path.join(base_path, r"article\article-cnki-cookie.txt")
+cookie_path = os.path.join(base_path, r"article\qikan-cnki-cookie.txt")
 
 session.cookies = HC.MozillaCookieJar(filename=cookie_path)
 
@@ -97,6 +95,7 @@ session.get('http://kns.cnki.net/kns/brief/result.aspx', headers=headers)
 
 def login():
     # 多步登陆获取完整cookie
+    session.get('http://login.cnki.net/TopLogin/api/loginapi/Logout', headers=headers)
     session.get(
         'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
         headers=headers)
@@ -250,52 +249,26 @@ def get_list(key, page_num, param_dict):
             log.info("文件类型未知，原文类型{}".format(type))
 
         # 输出表格列表
-        log.info("{},{},{},{},{},{}".format(tr_order, tr_title, tr_author, tr_file_type, tr_time.strip(), tr_db.strip()))
+        log.info(
+            "{},{},{},{},{},{}".format(tr_order, tr_title, tr_author, tr_file_type, tr_time.strip(), tr_db.strip()))
         # 文件重复去重
         file_will_write = os.path.join(file_dir, tr_title)
 
-        if_down = True
-        # 去掉包含关键字的题目
-        key_ignore = ["总目次", "索引", "总目录"]
-        for key_i in key_ignore:
-            if key_i in tr_title:
-                log.info('\t当前文章标题包含关键字 {} ，已忽略下载'.format(key_i))
-                if_down = False
-                break
-
-        # 相同网站文件重复去重-标题名加作者
-        rows = db.execute(
-            "select * from article_down where source='中国知网' and type ='qikan' and title='{}' and head_author='{}'".format(
-                tr_title, tr_author))
-        if len(rows) > 0:
-            log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
-            if_down = False
-
-        # 不同网站重复去重-根据标题
-        rows_2 = db.execute(
-            "select * from article_down where source='维普网' and type ='qikan' and title='{}'".format(
-                tr_title))
-        if len(rows_2) > 0:
-            log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
-            if_down = False
-
-        # for f in file_dir_files:
-        #     if f.startswith(tr_title):
-        #         print('\t{},{}'.format(f, tr_title))
-        #         print('\t文件已存在 ... {}'.format(os.path.join(file_dir, f)))
-        #         if_down = False
-        #         with open(file_m, "a") as fm:
-        #             fm.write(tr_title + "," + os.path.join(file_dir, f) + "\n")
-        #         continue
-        if if_down:
+        if check_before_download(tr_title, tr_author):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
-            download_url = 'http://kns.cnki.net/kns' + tr_down_url[2:] + '&dflag=pdfdown'
-            log.info('\t下载链接 ... {}'.format(download_url))
-            # download(tr_title, tr_author, download_url)
-            article_url = 'http://kns.cnki.net/kns' + tds[1].select('a')[0].attrs['href']
-            article_response = session.get(article_url)
-            print(article_response.text)
-            time.sleep(6)
+
+            article_url = 'http://kns.cnki.net' + tds[1].select('a')[0].attrs['href']
+            article_response = session.get(article_url, headers=headers)
+            article_soup = BeautifulSoup(article_response.text, 'lxml', from_encoding='utf-8')
+            pdf_down = article_soup.select_one("#pdfDown")
+            # 有pdf下载按钮才会触发
+            if pdf_down:
+                download_url = 'http://kns.cnki.net' + pdf_down.attrs['href']
+                log.info('\t下载链接 ... {}'.format(download_url))
+                download(tr_title, tr_author, download_url)
+                time.sleep(6)
+            else:
+                log.info('\t无pdf下载链接 ... 文章链接{}'.format(article_url))
 
 
 def download(title, author, down_url):
@@ -314,16 +287,27 @@ def download(title, author, down_url):
     down_headers['Cookie'] = down_cookie_str[:-1]
     # print_cookie()
 
+    # 第一次请求重定向
     down_headers['Host'] = get_host(down_url)['host']
+    # r_d = session.get(down_url, headers=down_headers, allow_redirects=False)
     r_d = session.get(down_url, headers=down_headers, allow_redirects=False)
     loc_pubdownload = r_d.headers.get('Location', None)
+    print(r_d.headers)
+
+    # 第二次请求重定向
+    down_headers['Host'] = get_host(r_d.headers.get('Location'))['host']
+    r_d = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False)
+    loc_pubdownload = r_d.headers.get('Location', None)
+    print(r_d.headers)
 
     # 这一步验证是否已支付，如果未支付，该步骤则返回的是页面，没有location
     if loc_pubdownload:
         # print(session.cookies)
+        # 第三次请求，pubdownload，如果未支付，则返回页面，如果已支付，则继续重定向直到下载
         down_headers['Host'] = get_host(loc_pubdownload)['host']
         r_pubdownload = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False)
         r_pubdownload.encoding = 'utf-8'
+        print(r_pubdownload.headers)
         # print(r_pubdownload.status_code)
         # print(r_pubdownload.text)
 
@@ -335,9 +319,12 @@ def download(title, author, down_url):
                 'pid': 'cjfq',
                 'uid': requests.utils.dict_from_cookiejar(session.cookies).get('LID')
             }
-            session.close()
+            # session.close()
+            down_headers['Host'] = get_host(loc_pubdownload)['host']
             r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False)
             r_pay.encoding = 'utf-8'
+            print(loc_pubdownload)
+            print(r_pay.headers)
             if r_pay.status_code == 302:
                 log.info('\t文章支付完成 ...{}'.format(r_pay.headers))
                 time.sleep(2)
@@ -353,6 +340,7 @@ def download(title, author, down_url):
                             r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
                         session.close()
                         r = session.get(r_location, headers=down_headers, allow_redirects=False)
+                        print(r_location)
                 except:
                     log.error(traceback.format_exc())
                     log.error(r.headers)
@@ -362,7 +350,7 @@ def download(title, author, down_url):
                 save_file(title, author, r)
             else:
                 log.error('\t文章支付无效 ...{}'.format(r_pay.headers))
-                log.error('\t文章链接 ...{}'.format('http://kns.cnki.net/kns' + down_url[2:]))
+                log.error('\t文章链接 ...{}'.format(down_url[0:]))
 
         else:
             # 返回的是文件流
@@ -399,21 +387,21 @@ def get_host(url):
 
 
 def save_file(title, author, response):
-    if response.headers.get('Content-Disposition'):
+    orginal_file_name = response.headers.get('Content-Disposition')
+    if orginal_file_name:
         # 检测编码, 获取header中文文件名
-        file_name_str = str(bytes(response.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GBK")
+        try:
+            file_name_str = str(bytes(orginal_file_name, encoding="iso-8859-1"), encoding="GBK")
+        except :
+            file_name_str = str(bytes(orginal_file_name, encoding="iso-8859-1"), encoding="utf-8")
         file_name = file_name_str.split('filename=')[1]
+        file_name = file_name.replace('"', '')
+        file_name = urllib.parse.unquote(file_name, encoding='utf-8', errors='replace')
         # print(file_name)
 
         file2write = os.path.join(file_dir, file_name)
-        rows = db.execute("select * from article_down where source='中国知网' and type ='qikan' and title='{}'".format(title), )
-        if len(rows) > 0:
-            for row in rows:
-                download_exist = row.get("file_name")
-                if file_name.replace(".pdf", "") in download_exist or download_exist in file_name.replace(".pdf", ""):
-                    log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
-                    insert_db(title, author, file_name.replace(".pdf", ""), file2write)
-                    return
+        if not check_when_download(file_name, file2write, title, author):
+            return
         if os.path.exists(file2write):
             log.info('\t文件已存在 ... {}'.format(file2write))
             insert_db(title, author, file_name.replace(".pdf", ""), file2write)
@@ -437,9 +425,50 @@ def save_file(title, author, response):
     time.sleep(2)
 
 
+def check_before_download(tr_title, tr_author):
+    if_down = True
+    # 去掉包含关键字的题目
+    key_ignore = ["总目次", "索引", "总目录"]
+    for key_i in key_ignore:
+        if key_i in tr_title:
+            log.info('\t当前文章标题包含关键字 {} ，已忽略下载'.format(key_i))
+            if_down = False
+            break
+    # 相同网站文件重复去重-标题名加作者
+    rows = db.execute(
+        "select * from article_down where source='中国知网' and type ='期刊' and title='{}' and head_author='{}'".format(
+            tr_title, tr_author))
+    if len(rows) > 0:
+        log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
+        if_down = False
+
+    # 不同网站重复去重-根据标题
+    rows_2 = db.execute(
+        "select * from article_down where source='维普网' and type ='期刊' and title='{}'".format(
+            tr_title))
+    if len(rows_2) > 0:
+        log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
+        if_down = False
+    return if_down
+
+
+def check_when_download(file_name, file2write, title, author):
+    if_down = True
+    rows = db.execute("select * from article_down where source='中国知网' and type ='期刊' and title='{}'".format(title))
+    if len(rows) > 0:
+        for row in rows:
+            download_exist = row.get("file_name")
+            if file_name.replace(".pdf", "") in download_exist or download_exist in file_name.replace(".pdf", ""):
+                log.info('\t文件已存在类似 ... {} ，原{}'.format(file2write, download_exist))
+                insert_db(title, author, file_name.replace(".pdf", ""), file2write)
+                if_down = False
+                break
+    return if_down
+
+
 def insert_db(title, head_author, file_name, path):
     db.execute("insert into article_down(source,type,title,head_author,file_name,path) "
-               "values ('中国知网','cnki','{}','{}','{}','{}')".format(title, head_author, file_name, path))
+               "values ('中国知网','期刊','{}','{}','{}','{}')".format(title, head_author, file_name, path))
 
 
 def print_cookie():
@@ -450,7 +479,7 @@ def print_cookie():
 login()
 log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 get_total(
-    "FT=聚乙二醇干扰素α-2b OR FT=佩乐能")
+    "FT=依托考昔 OR FT=安康信")
 
 # log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
 # time.sleep(2)
