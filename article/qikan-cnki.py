@@ -149,7 +149,7 @@ def get_total(key):
         , 'db_opt': 'CJFQ'
         , 'expertvalue': key
         , 'his': '0'
-        , 'year_from': '2018'
+        , 'year_from': '2019'
         , 'year_to': '2019'
         , 'year_type': 'echar'
         , 'his': '0'
@@ -254,7 +254,7 @@ def get_list(key, page_num, param_dict):
         # 文件重复去重
         file_will_write = os.path.join(file_dir, tr_title)
 
-        if check_before_download(tr_title, tr_author):
+        if check_before_download(tr_title, tr_author, from_source):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
 
             article_url = 'http://kns.cnki.net' + tds[1].select('a')[0].attrs['href']
@@ -425,7 +425,7 @@ def save_file(title, author, response):
     time.sleep(2)
 
 
-def check_before_download(tr_title, tr_author):
+def check_before_download(tr_title, tr_author, from_source):
     if_down = True
     # 去掉包含关键字的题目
     key_ignore = ["总目次", "索引", "总目录"]
@@ -434,19 +434,28 @@ def check_before_download(tr_title, tr_author):
             log.info('\t当前文章标题包含关键字 {} ，已忽略下载'.format(key_i))
             if_down = False
             break
+
+    # 来源关键词过滤
+    rows_source = db.execute(
+        "select * from article_exclude where source='中国知网' and type ='期刊' and (article_result='{}' or article_source='{}')".format(
+            from_source, from_source))
+    if len(rows_source) > 0:
+        log.info('\t文件来源存在于过滤条件 ... 来源 {}'.format(from_source))
+        if_down = False
+
     # 相同网站文件重复去重-标题名加作者
-    rows = db.execute(
+    rows_title_author = db.execute(
         "select * from article_down where source='中国知网' and type ='期刊' and title='{}' and head_author='{}'".format(
             tr_title, tr_author))
-    if len(rows) > 0:
+    if len(rows_title_author) > 0:
         log.info('\t文件已存在当前网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
         if_down = False
 
     # 不同网站重复去重-根据标题
-    rows_2 = db.execute(
+    rows_title = db.execute(
         "select * from article_down where source='维普网' and type ='期刊' and title='{}'".format(
             tr_title))
-    if len(rows_2) > 0:
+    if len(rows_title) > 0:
         log.info('\t文件已存在其他网站目录列表 ... {}'.format(os.path.join(file_dir, tr_title)))
         if_down = False
     return if_down
@@ -479,7 +488,10 @@ def print_cookie():
 login()
 log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 get_total(
-    "FT=依托考昔 OR FT=安康信")
+    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦")
+
+get_total(
+    "FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达 OR FT=阿瑞吡坦 OR FT=意美 OR FT=特地唑胺 OR FT=赛威乐")
 
 # log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
 # time.sleep(2)

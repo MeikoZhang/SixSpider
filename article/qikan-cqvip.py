@@ -147,7 +147,7 @@ def get_total(key=None):
     # 获取搜索列表
     url = 'http://qikan.cqvip.com/Search/SearchList'
     list_data = {
-        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2018","EndYear":"2019","JournalRange":"","DomainRange":"","PageSize":"0","PageNum":"1","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"9a2c2edb-4c06-8fa0-631c-a1745ab6e81c"}'
+        'searchParamModel': '{"ObjectType":1,"SearchKeyList":[],"SearchExpression":"'+key+'","BeginYear":"2019","EndYear":"2019","JournalRange":"","DomainRange":"30","PageSize":"0","PageNum":"1","Sort":"0","ClusterFilter":"","SType":"","StrIds":"","UpdateTimeType":"","ClusterUseType":"Article","IsNoteHistory":1,"AdvShowTitle":"'+key+'   AND 年份：2019-2019 AND 学科限定：医药卫生","ObjectId":"","ObjectSearchType":"0","ChineseEnglishExtend":"0","SynonymExtend":"0","ShowTotalCount":"0","AdvTabGuid":"e92508a5-2570-c333-2655-432a622630ee"}'
     }
     r = session.post(url, data=list_data, headers=headers)
     r.encoding = 'utf-8'
@@ -329,4 +329,5 @@ def insert_db(title, head_author, file_name, path):
 
 # get_list('U=依托考昔 OR U=安康信')
 login()
-get_total("U=特地唑胺 OR U=赛威乐")
+get_total("U=依托考昔 OR U=安康信 OR U=卡泊芬净 OR U=科赛斯 OR U=氯沙坦 OR U=络沙坦 OR U=洛沙坦 OR U=科素亚 OR U=阿仑膦酸钠 OR U=阿伦磷酸钠 OR U=福善美 OR U=氯沙坦钾氢氯噻嗪 OR U=海捷亚 OR U=厄他培南 OR U=艾他培南 OR U=怡万之 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保法止 OR U=非那雄胺 OR U=非那司提 OR U=非那甾胺 OR U=保列治 OR U=依那普利 OR U=恩纳普利 OR U=苯酯丙脯酸 OR U=悦宁定 OR U=卡左双多巴 OR U=息宁 OR U=孟鲁司特 OR U=孟鲁斯特 OR U=顺尔宁 OR U=顺耳宁 OR U=亚胺培南 OR U=亚安培南 OR U=泰能 OR U=辛伐他汀 OR U=新伐他汀 OR U=舒降之 OR U=舒降脂 OR U=拉替拉韦 OR U=艾生特 OR U=23价肺炎球菌多糖疫苗 OR U=纽莫法 OR U=人二倍体甲型肝炎灭活疫苗 OR U=维康特 OR U=西格列汀 OR U=西他列汀 OR U=捷诺维 OR U=西格列汀二甲双胍 OR U=西格列汀二甲双胍 OR U=捷诺达 OR U=依折麦布 OR U=依替米贝 OR U=益适纯 OR U=阿仑膦酸钠维D3 OR U=福美加 OR U=福美佳 OR U=阿瑞匹坦 OR U=阿瑞吡坦 OR U=意美 OR U=地氯雷他定")
+get_total("U=恩理思 OR U=糠酸莫米松 OR U=内舒拿 OR U=复方倍他米松 OR U=得宝松 OR U=重组促卵泡素β OR U=普利康 OR U=依折麦布辛伐他汀 OR U=依替米贝辛伐他汀 OR U=葆至能 OR U=替莫唑胺 OR U=泰道 OR U=去氧孕烯炔雌醇 OR U=妈富隆 OR U=去氧孕烯炔雌醇 OR U=美欣乐 OR U=替勃龙 OR U=替勃隆 OR U=利维爱 OR U=十一酸睾酮 OR U=安特尔 OR U=罗库溴铵 OR U=爱可松 OR U=肌松监测仪 OR U=米氮平 OR U=瑞美隆 OR U=依托孕烯 OR U=依伴侬 OR U=泊沙康唑 OR U=诺科飞 OR U=加尼瑞克 OR U=殴加利 OR U=达托霉素 OR U=克必信 OR U=舒更葡糖钠 OR U=布瑞亭 OR U=四价人乳头瘤病毒疫苗 OR U=佳达修 OR U=五价重配轮状病毒减毒活疫苗 OR U=乐儿德 OR U=九价人乳头瘤病毒疫苗 OR U=佳达修 OR U=依巴司韦格佐普韦 OR U=格佐普韦/依巴司韦 OR U=择必达 OR U=依托孕烯炔雌醇阴道环 OR U=舞悠 OR U=帕博利珠单抗 OR U=可瑞达 OR U=特地唑胺 OR U=赛威乐")
