@@ -195,7 +195,12 @@ def get_list(key=None, page="1"):
             i = i+1
             # 获取文章名称title
             title = alink.select('dt a[target=_blank]')[0].get_text()
-            author = alink.select('dd .author a')[0].get_text()
+            # 获取首作者
+            authors = alink.select('dd .author a')
+            author = ""
+            if len(authors) > 0:
+                author = authors[0].get_text()
+            # 获取来源
             article_a = alink.select('.source .article-source a')
             log.info("{},{},{},{}".format(i, title, author, article_a))
 

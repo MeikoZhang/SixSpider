@@ -191,7 +191,7 @@ def get_total(key):
     # 获取查询列表
     r_list_doc = session.get(
         'http://kns.cnki.net/kns/brief/brief.aspx?pagename=' + r_param.text + '&t='
-        + str(int(time.time() * 1000)) + '&keyValue=&S=1&sorttype=',
+        + str(int(time.time() * 1000)) + '&keyValue=&S=1&sorttype=(FFD%2c%27RANK%27)+desc',
         headers=headers)
     r_list_doc.encoding = 'utf-8'
     # print(r_list_doc.text)
@@ -204,9 +204,12 @@ def get_total(key):
     log.info("找到 {} 条结果，共分 {} 页".format(result_count, page_count))
 
     # 开始分页下载
-    for page_num in range(page_count):
-        get_list(key, page_num + 1, param_dict)
+    for page_num in range(1, page_count):
+        get_list(key, page_num, param_dict)
         time.sleep(2)
+        if page_num * page_count >= 6000:
+            log.info("总记录数已达6000，停止翻页......")
+            break
     log.info(">>>>>>>>>>程序执行完成 .................")
 
 
@@ -222,6 +225,7 @@ def get_list(key, page_num, param_dict):
         , 'DisplayMode': 'listmode'
         , 'dbPrefix': param_dict['dbPrefix']
         , 'PageName': param_dict['pagename']
+        , 'sorttype': "(FFD,'RANK') desc"
         , 'isinEn': param_dict['isinEn']
     }
     # 获取查询列表
@@ -229,6 +233,7 @@ def get_list(key, page_num, param_dict):
     r_list_doc = session.get(list_url, headers=headers)
     r_list_doc.encoding = 'utf-8'
     # print(r_list_doc.text)
+    print(list_url)
 
     soup = BeautifulSoup(r_list_doc.text, 'lxml', from_encoding='utf-8')
     headers['Referer'] = list_url

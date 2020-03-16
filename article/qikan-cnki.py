@@ -20,7 +20,7 @@ import EasySqlite
 
 socket.setdefaulttimeout(20)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
-base_path = r"/Users/krison/Downloads/文档"
+base_path = r"D:/文档"
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
@@ -57,6 +57,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
 }
 
+# 20s过期时间
+global_timeout = 20
 # 登陆信息
 data = {
     'userName': 'sherry.huang@goal-noah.com',
@@ -165,7 +167,7 @@ def get_total(key):
     # 获取查询列表
     r_list_doc = session.get(
         'http://kns.cnki.net/kns/brief/brief.aspx?pagename=' + r_param.text + '&t='
-        + str(int(time.time() * 1000)) + '&keyValue=&S=1&sorttype=',
+        + str(int(time.time() * 1000)) + '&keyValue=&S=1&sorttype=(FFD%2c%27RANK%27)+desc',
         headers=headers)
     r_list_doc.encoding = 'utf-8'
     # print(r_list_doc.text)
@@ -196,11 +198,12 @@ def get_list(key, page_num, param_dict):
         , 'DisplayMode': 'listmode'
         , 'dbPrefix': param_dict['dbPrefix']
         , 'PageName': param_dict['pagename']
+        , 'sorttype': "(FFD,'RANK') desc"
         , 'isinEn': param_dict['isinEn']
     }
     # 获取查询列表
     list_url = 'http://kns.cnki.net/kns/brief/brief.aspx?' + urllib.parse.urlencode(page_data)
-    r_list_doc = session.get(list_url, headers=headers)
+    r_list_doc = session.get(list_url, headers=headers, timeout=global_timeout)
     r_list_doc.encoding = 'utf-8'
     # print(r_list_doc.text)
 
@@ -258,7 +261,7 @@ def get_list(key, page_num, param_dict):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
 
             article_url = 'http://kns.cnki.net' + tds[1].select('a')[0].attrs['href']
-            article_response = session.get(article_url, headers=headers)
+            article_response = session.get(article_url, headers=headers, timeout=global_timeout)
             article_soup = BeautifulSoup(article_response.text, 'lxml', from_encoding='utf-8')
             pdf_down = article_soup.select_one("#pdfDown")
             # 有pdf下载按钮才会触发
@@ -290,13 +293,13 @@ def download(title, author, down_url):
     # 第一次请求重定向
     down_headers['Host'] = get_host(down_url)['host']
     # r_d = session.get(down_url, headers=down_headers, allow_redirects=False)
-    r_d = session.get(down_url, headers=down_headers, allow_redirects=False)
+    r_d = session.get(down_url, headers=down_headers, allow_redirects=False, timeout=global_timeout)
     loc_pubdownload = r_d.headers.get('Location', None)
     print(r_d.headers)
 
     # 第二次请求重定向
     down_headers['Host'] = get_host(r_d.headers.get('Location'))['host']
-    r_d = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False)
+    r_d = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False, timeout=global_timeout)
     loc_pubdownload = r_d.headers.get('Location', None)
     print(r_d.headers)
 
@@ -305,7 +308,7 @@ def download(title, author, down_url):
         # print(session.cookies)
         # 第三次请求，pubdownload，如果未支付，则返回页面，如果已支付，则继续重定向直到下载
         down_headers['Host'] = get_host(loc_pubdownload)['host']
-        r_pubdownload = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False)
+        r_pubdownload = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False, timeout=global_timeout)
         r_pubdownload.encoding = 'utf-8'
         print(r_pubdownload.headers)
         # print(r_pubdownload.status_code)
@@ -321,7 +324,7 @@ def download(title, author, down_url):
             }
             # session.close()
             down_headers['Host'] = get_host(loc_pubdownload)['host']
-            r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False)
+            r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False, timeout=global_timeout)
             r_pay.encoding = 'utf-8'
             print(loc_pubdownload)
             print(r_pay.headers)
@@ -339,7 +342,7 @@ def download(title, author, down_url):
                         else:
                             r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
                         session.close()
-                        r = session.get(r_location, headers=down_headers, allow_redirects=False)
+                        r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
                         print(r_location)
                 except:
                     log.error(traceback.format_exc())
@@ -364,7 +367,7 @@ def download(title, author, down_url):
                         down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                     else:
                         r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
-                    r = session.get(r_location, headers=down_headers, allow_redirects=False)
+                    r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
             except:
                 log.error(traceback.format_exc())
                 log.error(r.headers)
