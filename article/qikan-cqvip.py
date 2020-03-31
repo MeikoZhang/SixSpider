@@ -13,6 +13,7 @@ import hashlib
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import EasySqlite
+import urllib.parse
 
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
 base_path = r"/Users/krison/Downloads/文档"
@@ -39,7 +40,7 @@ log.setLevel(logging.INFO)
 log.addHandler(log_file_handler)
 log.addHandler(log_console_handler)
 
-
+file_name_re = re.compile(r".*?([\u4E00-\u9FA5]+\.pdf)")
 headers = {
     'Accept': 'text/html, */*; q=0.01'
     , 'Accept-Encoding': 'gzip, deflate'
@@ -262,9 +263,25 @@ def get_list(key=None, page="1"):
                 log.info('\t文件下载链接获取失败 ... {}'.format(article_a))
 
 
+# 获取请求url域名
+def get_host(url):
+    pattern = re.compile(r'(.*?)://(.*?)/', re.S)
+    response = re.search(pattern, url)
+    if response:
+        return {'header': str(response.group(1)).strip(), 'host': str(response.group(2)).strip()}
+    else:
+        return {'header': '', 'host': ''}
+
+
 def download(title, author, download_url):
     file_name = download_url.split('FileName=')[1]
     if file_name:
+        if not file_name_re.match(file_name):
+            file_name = urllib.parse.unquote(file_name)
+            if not file_name_re.match(file_name):
+                log.info('\t文件名获取失败，无法生成文件名 ..... {}'.format(file_name))
+                return
+
         file2write = os.path.join(file_dir, file_name)
         if not check_when_download(file_name, file2write, title, author):
             return
@@ -274,11 +291,16 @@ def download(title, author, download_url):
             # 更新目录
             insert_db(title, author, file_name.replace(".pdf", ""), file2write)
         else:
-            f = session.get(download_url)
-            # 检测编码, 获取header中文文件名
-            # file_name_str = str(bytes(f.headers['Content-Disposition'], encoding="iso-8859-1"), encoding="GB2312")
-            # fileName = file_name_str.split('filename=')[1]
-            # fileName = fileName.replace('"', '').replace("'", "")
+            down_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+                , 'Accept-Encoding': 'gzip, deflate'
+                , 'Accept-Language': 'zh-CN,zh;q=0.9'
+                , 'Connection': 'keep-alive'
+                , 'Host': get_host(download_url)['host']
+                ,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+            }
+            f = session.get(download_url, headers=down_headers)
             with open(file2write, "wb") as code:
                 code.write(f.content)
                 # 更新目录
