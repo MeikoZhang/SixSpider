@@ -513,3 +513,5 @@ get_total(
 
 # removeHandler 要放在程序运用打印日志的后面
 log.removeHandler(log_file_handler)
+if os.path.exists(cookie_path):
+    os.remove(cookie_path)
