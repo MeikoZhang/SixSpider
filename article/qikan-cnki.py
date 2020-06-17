@@ -80,7 +80,7 @@ else:
     os.mkdir(file_dir)
 
 # 连接目录表Sqlite
-db = EasySqlite.EasySqlite('E:/文档/article/article.db')
+db = EasySqlite.EasySqlite(os.path.join(base_path, r"article/article.db"))
 
 # 请求的全局session
 session = requests.Session()
@@ -89,21 +89,21 @@ cookie_path = os.path.join(base_path, r"article\qikan-cnki-cookie.txt")
 
 session.cookies = HC.MozillaCookieJar(filename=cookie_path)
 
-session.get('http://www.cnki.net/', headers=headers, allow_redirects=False)
-session.get('http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
+session.get('https://www.cnki.net/', headers=headers, allow_redirects=False)
+session.get('https://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
             headers=headers)
-session.get('http://kns.cnki.net/kns/brief/result.aspx', headers=headers)
+session.get('https://kns.cnki.net/kns/brief/result.aspx', headers=headers)
 
 
 def login():
     # 多步登陆获取完整cookie
-    session.get('http://login.cnki.net/TopLogin/api/loginapi/Logout', headers=headers)
+    session.get('https://login.cnki.net/TopLogin/api/loginapi/Logout', headers=headers)
     session.get(
-        'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
+        'https://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
         headers=headers)
     # cookie新增SID_klogin
-    session.get('http://kns.cnki.net/KLogin/Request/GetKFooter.ashx', headers=headers)
-    r = session.get('http://login.cnki.net/TopLogin/api/loginapi/Login?isAutoLogin=false&'
+    session.get('https://kns.cnki.net/KLogin/Request/GetKFooter.ashx', headers=headers)
+    r = session.get('https://login.cnki.net/TopLogin/api/loginapi/Login?isAutoLogin=false&'
                     + urllib.parse.urlencode(data) + '&_=' + str(int(time.time() * 1000)))
     user_info = json.loads(r.text[1: -1])
     if user_info.get('IsSuccess'):
@@ -111,9 +111,9 @@ def login():
         login_header = {
             'Host': 'login.cnki.net',
             'Pragma': 'no-cache',
-            'Referer': 'http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
+            'Referer': 'https://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
         }
-        session.post('http://kns.cnki.net/kns/Loginid.aspx', data={'uid': user_info.get('Uid')},
+        session.post('https://kns.cnki.net/kns/Loginid.aspx', data={'uid': user_info.get('Uid')},
                      headers={**headers, **login_header})
         session.cookies.save()
     else:
@@ -137,7 +137,7 @@ def login():
 
 def get_total(key):
     headers[
-        'Referer'] = 'Referer: http://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
+        'Referer'] = 'Referer: https://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD'
 
     s_handle_data = {
         'action': ''
@@ -160,13 +160,13 @@ def get_total(key):
         , '__': 'Thu Jan 10 2020 15:05:25 GMT+0800 (中国标准时间)'
     }
     # 设置查询条件，请求一次
-    total_url = 'http://kns.cnki.net/kns/request/SearchHandler.ashx'
+    total_url = 'https://kns.cnki.net/kns/request/SearchHandler.ashx'
     r_param = session.post(total_url, data=s_handle_data, headers=headers)
     param_dict = dict(parse.parse_qsl("pagename=" + r_param.text))
 
     # 获取查询列表
     r_list_doc = session.get(
-        'http://kns.cnki.net/kns/brief/brief.aspx?pagename=' + r_param.text + '&t='
+        'https://kns.cnki.net/kns/brief/brief.aspx?pagename=' + r_param.text + '&t='
         + str(int(time.time() * 1000)) + '&keyValue=&S=1&sorttype=(FFD%2c%27RANK%27)+desc',
         headers=headers)
     r_list_doc.encoding = 'utf-8'
@@ -205,7 +205,7 @@ def get_list(key, page_size, page_num, param_dict):
         , 'isinEn': param_dict['isinEn']
     }
     # 获取查询列表
-    list_url = 'http://kns.cnki.net/kns/brief/brief.aspx?' + urllib.parse.urlencode(page_data)
+    list_url = 'https://kns.cnki.net/kns/brief/brief.aspx?' + urllib.parse.urlencode(page_data)
     r_list_doc = session.get(list_url, headers=headers, timeout=global_timeout)
     r_list_doc.encoding = 'utf-8'
     log.info(list_url)
@@ -250,7 +250,7 @@ def get_list(key, page_size, page_num, param_dict):
         if len(tds) > 5:
             tr_db = tds[5].text
 
-        # 下载 http://kns.cnki.net/kns/download.aspx
+        # 下载 https://kns.cnki.net/kns/download.aspx
         tr_down_url = ""
         if len(tds) > 6:
             if len(tds[6].select('a')) > 0:
@@ -278,7 +278,7 @@ def get_list(key, page_size, page_num, param_dict):
         if check_before_download(tr_title, tr_author, from_source):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
 
-            article_url = 'http://kns.cnki.net' + tds[1].select('a')[0].attrs['href']
+            article_url = 'https://kns.cnki.net' + tds[1].select('a')[0].attrs['href']
             article_response = session.get(article_url, headers=headers, timeout=global_timeout)
             article_soup = BeautifulSoup(article_response.text, 'lxml', from_encoding='utf-8')
             pdf_down = article_soup.select_one("#pdfDown")
@@ -286,7 +286,7 @@ def get_list(key, page_size, page_num, param_dict):
             if pdf_down:
                 download_url = pdf_down.attrs['href']
                 if not str(download_url).startswith("http"):
-                    download_url = 'http://kns.cnki.net' + download_url
+                    download_url = 'https://kns.cnki.net' + download_url
                 if str(download_url).startswith("https://chkdx.cnki.net"):
                     log.info('\tpdf下载链接无权限 ... 文章链接{}'.format(download_url))
                 else:
@@ -363,7 +363,7 @@ def download(title, author, down_url):
                         if str(r_location).startswith("http"):
                             down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                         else:
-                            r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
+                            r_location = "https://" + down_headers['Host'] + "/cjfdsearch/" + r_location
                         session.close()
                         r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
                         print(r_location)
@@ -389,7 +389,7 @@ def download(title, author, down_url):
                     if str(r_location).startswith("http"):
                         down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                     else:
-                        r_location = "http://" + down_headers['Host'] + "/cjfdsearch/" + r_location
+                        r_location = "https://" + down_headers['Host'] + "/cjfdsearch/" + r_location
                     r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
             except:
                 log.error(traceback.format_exc())
@@ -533,9 +533,9 @@ log.info(">>>>>>>>>>程序执行完成 .................")
 #     "FT=甘乐能 OR FT=聚乙二醇干扰素α-2b OR FT=佩乐能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=格佐普韦 OR FT=依巴司韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达")
 
 # download("基于江南原生态理念的水居民宿设计——以原舍·阅水民宿设计为例.pdf",
-#          "http://kns.cnki.net/kns/download.aspx?filename=s9Ge4EVaSNXewMFT3p2Z2RjdSBnW5Q2L5cVS4p2UIZTb6Flcp92dnJGepBTSGZUZthWQWpXYkFVY5x2QzoWWjZ2ZEF3QSNlduRjS6NlZXdkMmhDWFB1Y4kma0MmUGhGd4MUMnFXNnB1an9maxMGMVN3ZIljbqdUT&tablename=CJFDPREP")
+#          "https://kns.cnki.net/kns/download.aspx?filename=s9Ge4EVaSNXewMFT3p2Z2RjdSBnW5Q2L5cVS4p2UIZTb6Flcp92dnJGepBTSGZUZthWQWpXYkFVY5x2QzoWWjZ2ZEF3QSNlduRjS6NlZXdkMmhDWFB1Y4kma0MmUGhGd4MUMnFXNnB1an9maxMGMVN3ZIljbqdUT&tablename=CJFDPREP")
 # download("辛伐他汀片体外溶出一致性评价方法的建立_郭志渊_谢华_袁军.pdf",
-#          "http://kns.cnki.net/kns/download.aspx?filename=OhkdJJUYJRlbPdWWEJHb4ATNT1WR2RnUyhmMvVnSUFkMx1mNWV1TpJGRwIkaSp1YaJWbnZkQFFWevJnar8iN6xmW3cTcQN3Mj9SS5YEOrgTNjF3T3dTc5oUVq1WaFpkSy8mci9GNlJTavxkWRhmQxlFVOFUTLJUN&tablename=CAPJDAY")
+#          "https://kns.cnki.net/kns/download.aspx?filename=OhkdJJUYJRlbPdWWEJHb4ATNT1WR2RnUyhmMvVnSUFkMx1mNWV1TpJGRwIkaSp1YaJWbnZkQFFWevJnar8iN6xmW3cTcQN3Mj9SS5YEOrgTNjF3T3dTc5oUVq1WaFpkSy8mci9GNlJTavxkWRhmQxlFVOFUTLJUN&tablename=CAPJDAY")
 
 # removeHandler 要放在程序运用打印日志的后面
 log.removeHandler(log_file_handler)
