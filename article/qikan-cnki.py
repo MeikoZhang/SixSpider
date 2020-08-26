@@ -360,7 +360,7 @@ def download(title, author, down_url):
                 try:
                     while r.status_code == 302:
                         r_location = r.headers.get('Location')
-                        if str(r_location).startswith("http"):
+                        if str(r_location).startswith("http") or str(r_location).startswith("https"):
                             down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                         else:
                             r_location = "https://" + down_headers['Host'] + "/cjfdsearch/" + r_location
@@ -368,6 +368,7 @@ def download(title, author, down_url):
                         r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
                         print(r_location)
                 except:
+                    log.error('最后访问链接:{}'.format(r_location))
                     log.error(traceback.format_exc())
                     log.error(r.headers)
                     exit()
