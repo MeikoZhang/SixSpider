@@ -1,6 +1,7 @@
 # coding=gbk
 
 import requests
+from requests import ReadTimeout
 from bs4 import BeautifulSoup
 import time
 import os
@@ -18,7 +19,7 @@ from logging.handlers import TimedRotatingFileHandler
 import socket
 import EasySqlite
 
-socket.setdefaulttimeout(20)
+socket.setdefaulttimeout(30)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
 base_path = r"E:\文档"
 
@@ -58,7 +59,7 @@ headers = {
 }
 
 # 20s过期时间
-global_timeout = 20
+global_timeout = 30
 # 登陆信息
 data = {
     'userName': 'sherry.huang@goal-noah.com',
@@ -180,9 +181,9 @@ def get_total(key):
     log.info("找到 {} 条结果，共分 {} 页".format(result_count, page_count))
 
     # 开始分页下载
-    for page_num in range(1, page_count+1):
+    for page_num in range(1, page_count + 1):
         get_list(key, page_size, page_num, param_dict)
-        time.sleep(10)
+        time.sleep(15)
         if page_num * page_size >= 6000:
             log.info("总记录数已达6000，停止翻页......")
             break
@@ -214,6 +215,7 @@ def get_list(key, page_size, page_num, param_dict):
     headers['Referer'] = list_url
     trs = soup.select('.GridTableContent tr')
     # 去除标题栏
+    err_cn = 0
     for tr in trs[1:]:
         tds = tr.select('td')
         # 序号
@@ -232,7 +234,7 @@ def get_list(key, page_size, page_num, param_dict):
         tr_author = ""
         if len(authors_a) > 0:
             tr_author = authors_a[0].text
-            tr_author = tr_author.replace("'","-")
+            tr_author = tr_author.replace("'", "-")
 
         # 刊名
         from_source = ""
@@ -252,9 +254,11 @@ def get_list(key, page_size, page_num, param_dict):
 
         # 下载 https://kns.cnki.net/kns/download.aspx
         tr_down_url = ""
+        tr_down_title = ""
         if len(tds) > 6:
             if len(tds[6].select('a')) > 0:
                 tr_down_url = tds[6].select('a')[0].attrs['href']
+                tr_down_title = tds[6].select('a')[0].attrs['title']
 
         # 阅读
         type = ""
@@ -275,6 +279,11 @@ def get_list(key, page_size, page_num, param_dict):
         # 文件重复去重
         file_will_write = os.path.join(file_dir, tr_title)
 
+        if check_if_preserve(tr_title, tr_author):
+            log.info('\t文章没有权限下载，继续下一个 ... {}'.format(tr_down_title))
+            time.sleep(15)
+            continue
+
         if check_before_download(tr_title, tr_author, from_source):
             log.info('\t文件不存在，开始下载 ... {}'.format(file_will_write))
 
@@ -291,13 +300,20 @@ def get_list(key, page_size, page_num, param_dict):
                     log.info('\tpdf下载链接无权限 ... 文章链接{}'.format(download_url))
                 else:
                     log.info('\t下载链接 ... {}'.format(download_url))
-                    download(tr_title, tr_author, download_url)
-                    time.sleep(6)
+                    try:
+                        download(tr_title, tr_author, download_url, tr_authors)
+                    except:
+                        log.error(traceback.format_exc())
+                        log.error("下载失败: {0},{1}".format(tr_title, download_url))
+                        err_cn = err_cn + 1
+                        if err_cn >= 10:
+                            exit()
+                    time.sleep(15)
             else:
                 log.info('\t无pdf下载链接 ... 文章链接{}'.format(article_url))
 
 
-def download(title, author, down_url):
+def download(title, author, down_url, tr_authors):
     # print(down_url)
     down_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate',
@@ -316,7 +332,12 @@ def download(title, author, down_url):
     # 第一次请求重定向
     down_headers['Host'] = get_host(down_url)['host']
     # r_d = session.get(down_url, headers=down_headers, allow_redirects=False)
-    r_d = session.get(down_url, headers=down_headers, allow_redirects=False, timeout=global_timeout)
+    try:
+        r_d = session.get(down_url, headers=down_headers, allow_redirects=False, timeout=global_timeout)
+    except:
+        log.error(traceback.format_exc())
+        log.error("请求失败连接: {0}".format(down_url))
+
     loc_pubdownload = r_d.headers.get('Location', None)
     print(r_d.headers)
 
@@ -331,7 +352,8 @@ def download(title, author, down_url):
         # print(session.cookies)
         # 第三次请求，pubdownload，如果未支付，则返回页面，如果已支付，则继续重定向直到下载
         down_headers['Host'] = get_host(loc_pubdownload)['host']
-        r_pubdownload = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False, timeout=global_timeout)
+        r_pubdownload = session.get(loc_pubdownload, headers=down_headers, allow_redirects=False,
+                                    timeout=global_timeout)
         r_pubdownload.encoding = 'utf-8'
         print(r_pubdownload.headers)
         # print(r_pubdownload.status_code)
@@ -347,7 +369,8 @@ def download(title, author, down_url):
             }
             # session.close()
             down_headers['Host'] = get_host(loc_pubdownload)['host']
-            r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False, timeout=global_timeout)
+            r_pay = session.post(loc_pubdownload, data=pay_data, headers=down_headers, allow_redirects=False,
+                                 timeout=global_timeout)
             r_pay.encoding = 'utf-8'
             print(loc_pubdownload)
             print(r_pay.headers)
@@ -367,11 +390,17 @@ def download(title, author, down_url):
                         session.close()
                         r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
                         print(r_location)
-                except:
-                    log.error('最后访问链接:{}'.format(r_location))
+                except (ConnectionError, ReadTimeout) as conerr:
+                    log.error("超时下载失败连接: {0}".format(r_location))
+                    log.error("download connection error: {0}".format(conerr))
                     log.error(traceback.format_exc())
                     log.error(r.headers)
-                    exit()
+                except Exception as e:
+                    log.error("下载失败连接: {0}".format(r_location))
+                    log.error("download error: {0}".format(e))
+                    log.error(traceback.format_exc())
+                    log.error(r.headers)
+                    raise
 
                 # 保存文件
                 save_file(title, author, r)
@@ -387,20 +416,30 @@ def download(title, author, down_url):
             try:
                 while r.status_code == 302:
                     r_location = r.headers.get('Location')
-                    if str(r_location).startswith("http"):
+                    if str(r_location).startswith("http") or str(r_location).startswith("https"):
                         down_headers['Host'] = get_host(r.headers.get('Location'))['host']
                     else:
                         r_location = "https://" + down_headers['Host'] + "/cjfdsearch/" + r_location
                     r = session.get(r_location, headers=down_headers, allow_redirects=False, timeout=global_timeout)
-            except:
+            except (ConnectionError, ReadTimeout) as conerr:
+                log.error("超时下载失败连接: {0}".format(r_location))
+                log.error("download connection error: {0}".format(conerr))
                 log.error(traceback.format_exc())
                 log.error(r.headers)
-                exit()
+            except Exception as e:
+                log.error("下载失败连接: {0}".format(r_location))
+                log.error("download error: {0}".format(e))
+                log.error(traceback.format_exc())
+                log.error(r.headers)
+                raise
 
             # 保存文件
+            print('\t下载连接，{}'.format(r_location))
             save_file(title, author, r)
     else:
         log.error('\t下载文章连接无效，{}'.format(loc_pubdownload))
+        save_preserve(title, author, tr_authors)
+        log.error('\t 文章因权限无法下载，已保存')
 
 
 # 获取请求url域名
@@ -419,7 +458,7 @@ def save_file(title, author, response):
         # 检测编码, 获取header中文文件名
         try:
             file_name_str = str(bytes(orginal_file_name, encoding="iso-8859-1"), encoding="GBK")
-        except :
+        except:
             file_name_str = str(bytes(orginal_file_name, encoding="iso-8859-1"), encoding="utf-8")
         file_name = file_name_str.split('filename=')[1]
         file_name = file_name.replace('"', '')
@@ -450,6 +489,29 @@ def save_file(title, author, response):
     # 下载完成后关闭
     response.close()
     time.sleep(2)
+
+
+# 没有权限文件保存
+def check_if_preserve(tr_title, tr_author):
+    # 查询是否有
+    if_preserve = False
+    rt = db.execute(
+        "select * from article_preserve where title='{}' and author='{}'".format(tr_title, tr_author))
+    if len(rt) > 0:
+        log.info('\t 该权限文章名已存储 {}'.format(tr_title))
+        if_preserve = True
+    return if_preserve
+
+
+# 没有权限文件保存
+def save_preserve(tr_title, tr_author, tr_authors):
+    # 查询是否有
+    rt = db.execute(
+        "select * from article_preserve where title='{}' and author='{}'".format(tr_title, tr_author))
+    if len(rt) > 0:
+        log.info('\t 该权限文章名已存储 {}'.format(tr_title))
+    else:
+        db.execute("insert into article_preserve(source,type,title,author,authors) values ('中国知网','期刊','{}','{}','{}')".format(tr_title, tr_author, tr_authors))
 
 
 def check_before_download(tr_title, tr_author, from_source):
@@ -513,14 +575,49 @@ def print_cookie():
 
 
 login()
-log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
-get_total(
-    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 OR FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 OR FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 OR FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 OR FT=阿瑞匹坦 NOT KY=meta")
+# log.info("》》》》》》》》》测试》》》》》》》》》")
+# get_total("FT=成人细菌性皮肤病的病原菌分布与耐药性研究")
+# exit()
 
-log.info("》》》》》》》》》休息5秒，查询第二组关键词》》》》》》》》》")
+log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 time.sleep(5)
 get_total(
-    "FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 OR FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 OR FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 OR FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达 OR FT=阿瑞吡坦 OR FT=意美 OR FT=特地唑胺 OR FT=赛威乐 NOT KY=meta")
+    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第2组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第3组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=孟鲁司特 OR FT=孟鲁斯特 OR FT=顺尔宁 OR FT=顺耳宁 OR FT=亚胺培南 OR FT=亚安培南 OR FT=泰能 OR FT=辛伐他汀 OR FT=新伐他汀 OR FT=舒降之 OR FT=舒降脂 OR FT=拉替拉韦 OR FT=艾生特 OR FT=23价肺炎球菌多糖疫苗 OR FT=纽莫法 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第4组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=甲型肝炎灭活疫苗(人二倍体细胞) OR FT=人二倍体甲型肝炎灭活疫苗 OR FT=维康特 OR FT=西格列汀 OR FT=西他列汀 OR FT=捷诺维 OR FT=西格列汀二甲双胍 OR FT=西格列汀二甲双胍 OR FT=捷诺达 OR FT=依折麦布 OR FT=依替米贝 OR FT=益适纯 OR FT=阿仑膦酸钠维D3 OR FT=福美加 OR FT=福美佳 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第5组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=阿瑞匹坦 OR FT=地氯雷他定 OR FT=恩理思 OR FT=糠酸莫米松 OR FT=内舒拿 OR FT=复方倍他米松 OR FT=得宝松 OR FT=重组促卵泡素β OR FT=普利康 OR FT=依折麦布辛伐他汀 OR FT=依替米贝辛伐他汀 OR FT=葆至能 OR FT=替莫唑胺 OR FT=泰道 OR FT=去氧孕烯炔雌醇 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第6组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=妈富隆 OR FT=去氧孕烯炔雌醇 OR FT=美欣乐 OR FT=替勃龙 OR FT=替勃隆 OR FT=利维爱 OR FT=十一酸睾酮 OR FT=安特尔 OR FT=罗库溴铵 OR FT=爱可松 OR FT=肌松监测仪 OR FT=米氮平 OR FT=瑞美隆 OR FT=依托孕烯 OR FT=依伴侬 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第7组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=泊沙康唑 OR FT=诺科飞 OR FT=加尼瑞克 OR FT=殴加利 OR FT=达托霉素 OR FT=克必信 OR FT=舒更葡糖钠 OR FT=布瑞亭 OR FT=四价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=五价重配轮状病毒减毒活疫苗 OR FT=乐儿德 OR FT=九价人乳头瘤病毒疫苗 OR FT=佳达修 OR FT=依巴司韦格佐普韦 NOT KY=meta")
+
+log.info("》》》》》》》》》休息5秒，查询第8组关键词》》》》》》》》》")
+time.sleep(5)
+get_total(
+    "FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达 OR FT=阿瑞吡坦 OR FT=意美 OR FT=特地唑胺 OR FT=赛威乐 OR FT=艾托格列净 OR FT=埃格列净 OR FT=捷诺妥NOT KY=meta")
 
 log.info(">>>>>>>>>>程序执行完成 .................")
 # log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
