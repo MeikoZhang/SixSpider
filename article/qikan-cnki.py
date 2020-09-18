@@ -22,6 +22,7 @@ import EasySqlite
 socket.setdefaulttimeout(30)
 # base_path = os.path.abspath(os.path.join(os.getcwd(), ".."))
 base_path = r"E:\文档"
+# base_path = r'/Users/krison/Documents/文档'
 
 log_fmt = '%(asctime)s\tFile \"%(filename)s\",line %(lineno)s\t%(levelname)s: %(message)s'
 formatter = logging.Formatter(log_fmt)
@@ -69,6 +70,8 @@ data = {
 # 下载文件存储目录
 # file_dir = os.path.join(base_path, "中国知网")
 cur_day = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+# 导出因权限问题新增未下载的文件
+export_preserve_start = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 if cur_day > '2099-03-01':
     log.info("授权已过期")
     exit()
@@ -574,6 +577,23 @@ def print_cookie():
         log.info(cookie.name, cookie.value)
 
 
+def export_preserve(export_dir, start_time):
+    export_file_name = os.path.join(export_dir, '无权限文件.txt')
+
+    export_results = db.execute("select title,author,authors,create_time from article_preserve where source='中国知网' and type='期刊' and create_time>='{}'".format(start_time))
+    with open(export_file_name, 'r+') as fp:
+        ei = 1
+        fp.truncate()
+        if len(export_results) > 0:
+            fp.write('序号 | 标题 | 首作者 | 作者\n')
+            for result in export_results:
+                fp.write('{} | {} | {} | {}\n'.format(ei, result['title'], result['author'], result['authors']))
+                ei += 1
+            log.info('导出文件完成。\n')
+        else:
+            fp.write('没有需要导出的文件。\n')
+
+
 login()
 # log.info("》》》》》》》》》测试》》》》》》》》》")
 # get_total("FT=成人细菌性皮肤病的病原菌分布与耐药性研究")
@@ -620,6 +640,9 @@ get_total(
     "FT=择必达 OR FT=依托孕烯炔雌醇阴道环 OR FT=舞悠 OR FT=帕博利珠单抗 OR FT=可瑞达 OR FT=阿瑞吡坦 OR FT=意美 OR FT=特地唑胺 OR FT=赛威乐 OR FT=艾托格列净 OR FT=埃格列净 OR FT=捷诺妥NOT KY=meta")
 
 log.info(">>>>>>>>>>程序执行完成 .................")
+
+export_preserve(file_dir, export_preserve_start)
+log.info(">>>>>>>>>>无权限文件导出完成 .................")
 # log.info("》》》》》》》》》休息2秒，继续查询第二组关键词》》》》》》》》》")
 # time.sleep(2)
 # get_total(
