@@ -581,7 +581,7 @@ def export_preserve(export_dir, start_time):
     export_file_name = os.path.join(export_dir, '无权限文件.txt')
 
     export_results = db.execute("select title,author,authors,create_time from article_preserve where source='中国知网' and type='期刊' and create_time>='{}'".format(start_time))
-    with open(export_file_name, 'r+') as fp:
+    with open(export_file_name, 'w') as fp:
         ei = 1
         fp.truncate()
         if len(export_results) > 0:
