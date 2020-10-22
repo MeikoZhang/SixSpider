@@ -97,6 +97,7 @@ session.get('https://www.cnki.net/', headers=headers, allow_redirects=False)
 session.get('https://kns.cnki.net/kns/brief/result.aspx?dbprefix=CJFQ&crossDbcodes=CJFQ,CDFD,CMFD,CPFD,IPFD,CCND,CCJD',
             headers=headers)
 session.get('https://kns.cnki.net/kns/brief/result.aspx', headers=headers)
+login_time = time.time()
 
 
 def login():
@@ -137,6 +138,12 @@ def login():
     except Exception as e:
         log.error('未找到cookies文件')
         log.error(traceback.format_exc())
+
+
+# 大于30分钟后重新登陆
+def re_login():
+    if time.time() - login_time > 1800:
+        login()
 
 
 def get_total(key):
@@ -184,7 +191,7 @@ def get_total(key):
     log.info("找到 {} 条结果，共分 {} 页".format(result_count, page_count))
 
     # 开始分页下载
-    for page_num in range(1, page_count + 1):
+    for page_num in range(92, 92 + 1):
         get_list(key, page_size, page_num, param_dict)
         time.sleep(15)
         if page_num * page_size >= 6000:
@@ -194,6 +201,7 @@ def get_total(key):
 
 
 def get_list(key, page_size, page_num, param_dict):
+    re_login()
     page_data = {
         'curpage': page_num
         , 'RecordsPerPage': page_size
@@ -317,6 +325,7 @@ def get_list(key, page_size, page_num, param_dict):
 
 
 def download(title, author, down_url, tr_authors):
+    re_login()
     # print(down_url)
     down_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate',
@@ -452,7 +461,7 @@ def get_host(url):
     if response:
         return {'header': str(response.group(1)).strip(), 'host': str(response.group(2)).strip()}
     else:
-        return None
+        return {'header': '', 'host': ''}
 
 
 def save_file(title, author, response):
@@ -601,13 +610,11 @@ login()
 
 log.info("》》》》》》》》》查询第一组关键词》》》》》》》》》")
 time.sleep(5)
-get_total(
-    "FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 NOT KY=meta")
+# get_total("FT=依托考昔 OR FT=安康信 OR FT=卡泊芬净 OR FT=科赛斯 OR FT=氯沙坦 OR FT=络沙坦 OR FT=洛沙坦 OR FT=科素亚 OR FT=阿仑膦酸钠 OR FT=阿伦磷酸钠 OR FT=福善美 OR FT=氯沙坦钾氢氯噻嗪 OR FT=海捷亚 OR FT=厄他培南 OR FT=艾他培南 NOT KY=meta")
 
 log.info("》》》》》》》》》休息5秒，查询第2组关键词》》》》》》》》》")
 time.sleep(5)
-get_total(
-    "FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 NOT KY=meta")
+# get_total("FT=怡万之 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保法止 OR FT=非那雄胺 OR FT=非那司提 OR FT=非那甾胺 OR FT=保列治 OR FT=依那普利 OR FT=恩纳普利 OR FT=苯酯丙脯酸 OR FT=悦宁定 OR FT=卡左双多巴 OR FT=息宁 NOT KY=meta")
 
 log.info("》》》》》》》》》休息5秒，查询第3组关键词》》》》》》》》》")
 time.sleep(5)
